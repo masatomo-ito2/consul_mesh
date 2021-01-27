@@ -1,5 +1,5 @@
 # Vault
-provider "vault" { }
+provider "vault" {}
 
 # Remote state for AWS VPC
 data "terraform_remote_state" "aws_state" {
@@ -69,11 +69,11 @@ module "aws-consul-primary" {
   env                                  = var.env
 
   # consul stuff
-	#master_token      = random_uuid.master_token.result
-	#replication_token = random_uuid.replication_token
-	#gossip_key        = base64encode(random_string.gossip_key.result)
+  #master_token      = random_uuid.master_token.result
+  #replication_token = random_uuid.replication_token
+  #gossip_key        = base64encode(random_string.gossip_key.result)
 
-	depends_on = [ vault_generic_secret.consul ]
+  depends_on = [vault_generic_secret.consul]
 }
 
 # Azure

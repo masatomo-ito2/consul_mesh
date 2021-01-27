@@ -1,27 +1,27 @@
 variable "tfc_org" {
-  default = "masa_org"
+  type = string
 }
 
 variable "tfc_aws_ws" {
-  default = "aws_masa_vpc"
+  type = string
 }
 
 variable "tfc_azure_ws" {
-  default = "azure_resourcegroup"
+  type = string
 }
 
 variable "region" {
-  default = "ap-northeast-1"
+  type = string
 }
 
 variable "env" {
-  default = "demo"
+  type = string
 }
 
 variable "ssh_key_name" {
-  default = "masa"
+  type = string
 }
 
 variable "vault_addr" {
-  default = "https://vault-cluster.vault.11eaf0ae-df46-699b-81b5-0242ac110015.aws.hashicorp.cloud:8200"
+  type = string
 }
