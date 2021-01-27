@@ -27,7 +27,8 @@ data "terraform_remote_state" "azure_state" {
 
 # IAM
 module "iam" {
-  source = "./iam"
+  provider = aws.aws
+  source   = "./iam"
 
   vpc_id   = data.terraform_remote_state.aws_state.outputs.vpc_id_japan
   region   = var.region
@@ -59,7 +60,8 @@ EOT
 
 # AWS
 module "aws-consul-primary" {
-  source = "./aws-consul-primary"
+  provider = aws.aws
+  source   = "./aws-consul-primary"
 
   vpc_id                               = data.terraform_remote_state.aws_state.outputs.vpc_id_japan
   ssh_key_name                         = var.ssh_key_name
