@@ -1,6 +1,3 @@
-# Vault
-provider "vault" {}
-
 # Remote state for AWS VPC
 data "terraform_remote_state" "aws_state" {
   backend = "remote"
