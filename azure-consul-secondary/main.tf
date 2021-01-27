@@ -1,8 +1,3 @@
-provider "azurerm" {
-  version = "=2.20.0"
-  features {}
-}
-
 data "terraform_remote_state" "consul-primary" {
   backend = "local"
 
