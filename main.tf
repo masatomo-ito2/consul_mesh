@@ -47,9 +47,9 @@ resource "vault_generic_secret" "consul" {
 
   data_json = <<EOT
 {
-  "master_token": ${random_uuid.master_token.result},
-	"replication_token": ${random_uuid.replication_token},
-	"gossip_key": ${base64encode(random_string.gossip_key.result)}
+  "master_token": "${random_uuid.master_token.result}",
+	"replication_token": "${random_uuid.replication_token.result}",
+	"gossip_key": "${base64encode(random_string.gossip_key.result)}"
 }
 EOT
 }
