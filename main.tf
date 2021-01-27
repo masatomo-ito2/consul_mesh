@@ -24,8 +24,7 @@ data "terraform_remote_state" "azure_state" {
 
 # IAM
 module "iam" {
-  provider = aws.aws
-  source   = "./iam"
+  source = "./iam"
 
   vpc_id   = data.terraform_remote_state.aws_state.outputs.vpc_id_japan
   region   = var.region
@@ -57,8 +56,7 @@ EOT
 
 # AWS
 module "aws-consul-primary" {
-  provider = aws.aws
-  source   = "./aws-consul-primary"
+  source = "./aws-consul-primary"
 
   vpc_id                               = data.terraform_remote_state.aws_state.outputs.vpc_id_japan
   ssh_key_name                         = var.ssh_key_name
@@ -66,6 +64,7 @@ module "aws-consul-primary" {
   region                               = var.region
   aws_consul_iam_instance_profile_name = module.iam.aws_consul_iam_instance_profile_name
   env                                  = var.env
+  vault_addr                           = var.vault_addr
 
   # consul stuff
   #master_token      = random_uuid.master_token.result
