@@ -6,6 +6,6 @@ provider "aws" {
 }
 
 provider "azurerm" {
-	features {}
+  features {}
 }
 

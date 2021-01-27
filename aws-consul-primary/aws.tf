@@ -91,6 +91,8 @@ data "template_file" "init" {
     tpl_env        = var.env
     tpl_vault_addr = var.vault_addr
     tpl_region     = var.region
+    tpl_namespace  = var.vault_namespace
+    tpl_admin_passwd  = var.admin_passwd
   }
 
 }

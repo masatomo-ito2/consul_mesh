@@ -25,3 +25,11 @@ variable "env" {
 variable "vault_addr" {
   type = string
 }
+
+variable "vault_namespace" {
+  type = string
+}
+
+variable "admin_passwd" {
+	type = string
+}

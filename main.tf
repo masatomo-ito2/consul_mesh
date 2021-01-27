@@ -41,8 +41,16 @@ resource "random_string" "gossip_key" {
   length = 32
 }
 
+# Set up Vault
+module "vault" {
+  source = "./vault"
+
+	admin_passwd = var.admin_passwd
+}
+
 # Put secrets into vault
 resource "vault_generic_secret" "consul" {
+	depends_on = [module.vault]	
   path = "kv/consul"
 
   data_json = <<EOT
@@ -53,6 +61,7 @@ resource "vault_generic_secret" "consul" {
 }
 EOT
 }
+
 
 # AWS
 module "aws-consul-primary" {
@@ -65,6 +74,8 @@ module "aws-consul-primary" {
   aws_consul_iam_instance_profile_name = module.iam.aws_consul_iam_instance_profile_name
   env                                  = var.env
   vault_addr                           = var.vault_addr
+  vault_namespace                      = var.vault_namespace
+	admin_passwd = var.admin_passwd
 
   # consul stuff
   #master_token      = random_uuid.master_token.result

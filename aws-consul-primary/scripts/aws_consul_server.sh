@@ -22,12 +22,14 @@ apt install consul-enterprise vault-enterprise nomad-enterprise libcap-dev jq re
 
 #metadata
 local_ipv4="$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4)"
+logger "My local IP is $${local_ipv4}"
+
 
 #vault
 export VAULT_ADDR="${tpl_vault_addr}"
 # vault login -method=aws role=consul
-vault login -method=userpass username=admin password=admin
-CONNECT_TOKEN=$(vault token create -field token -policy connect -period 8h -orphan)
+vault login -method=userpass -namespace=${tpl_namespace} username=admin password=${tpl_admin_passwd}
+CONNECT_TOKEN=$(vault token create -namespace=${tpl_namespace} -field token -policy connect -orphan)
 
 mkdir -p /etc/vault-agent.d/
 mkdir -p /opt/consul/tls/

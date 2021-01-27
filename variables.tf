@@ -25,3 +25,12 @@ variable "ssh_key_name" {
 variable "vault_addr" {
   type = string
 }
+
+variable "vault_namespace" {
+  type = string
+}
+
+variable "admin_passwd" {
+  type      = string
+  sensitive = true
+}
