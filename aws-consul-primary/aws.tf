@@ -88,11 +88,13 @@ data "template_file" "init" {
   template = file("${path.module}/scripts/aws_consul_server.sh")
 
   vars = {
-    tpl_env        = var.env
-    tpl_vault_addr = var.vault_addr
-    tpl_region     = var.region
-    tpl_namespace  = var.vault_namespace
-    tpl_admin_passwd  = var.admin_passwd
+    tpl_env          = var.env
+    tpl_vault_addr   = var.vault_addr
+    tpl_region       = var.region
+    tpl_namespace    = var.vault_namespace
+    tpl_admin_passwd = var.admin_passwd
+    tpl_role_id      = var.role_id
+    tpl_secret_id    = var.secret_id
   }
 
 }

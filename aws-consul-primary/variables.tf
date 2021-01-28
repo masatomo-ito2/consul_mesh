@@ -31,5 +31,14 @@ variable "vault_namespace" {
 }
 
 variable "admin_passwd" {
-	type = string
+  type = string
 }
+
+variable "role_id" {
+  type = string
+}
+
+variable "secret_id" {
+  type = string
+}
+

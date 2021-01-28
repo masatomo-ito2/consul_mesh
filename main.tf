@@ -26,12 +26,12 @@ data "terraform_remote_state" "azure_state" {
 module "iam" {
   source = "./iam"
 
-  vpc_id   = data.terraform_remote_state.aws_state.outputs.vpc_id_japan
-  region   = var.region
-  env      = var.env
-  location = data.terraform_remote_state.azure_state.outputs.rg_location
-  rg_name  = data.terraform_remote_state.azure_state.outputs.rg_name
-
+  vpc_id               = data.terraform_remote_state.aws_state.outputs.vpc_id_japan
+  region               = var.region
+  env                  = var.env
+  location             = data.terraform_remote_state.azure_state.outputs.rg_location
+  rg_name              = data.terraform_remote_state.azure_state.outputs.rg_name
+  aws_vault_account_id = var.aws_vault_account_id
 }
 
 # Master tokens
@@ -45,13 +45,14 @@ resource "random_string" "gossip_key" {
 module "vault" {
   source = "./vault"
 
-	admin_passwd = var.admin_passwd
+  admin_passwd            = var.admin_passwd
+  aws_consul_iam_role_arn = module.iam.aws_consul_iam_role_arn
 }
 
 # Put secrets into vault
 resource "vault_generic_secret" "consul" {
-	depends_on = [module.vault]	
-  path = "kv/consul"
+  depends_on = [module.vault]
+  path       = "kv/consul"
 
   data_json = <<EOT
 {
@@ -75,7 +76,9 @@ module "aws-consul-primary" {
   env                                  = var.env
   vault_addr                           = var.vault_addr
   vault_namespace                      = var.vault_namespace
-	admin_passwd = var.admin_passwd
+  admin_passwd                         = var.admin_passwd
+  role_id                              = module.vault.aws_consul_role_id
+  secret_id                            = module.vault.aws_consul_secret_id
 
   # consul stuff
   #master_token      = random_uuid.master_token.result

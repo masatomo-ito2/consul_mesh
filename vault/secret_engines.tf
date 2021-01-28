@@ -5,10 +5,16 @@ resource "vault_mount" "kv" {
   description = "Key value secret engines"
 }
 
+# Transit
+resource "vault_mount" "transit" {
+  path = "transit"
+  type = "transit"
+}
+
 # PKI
 resource "vault_mount" "pki" {
   path                      = "pki"
-	type = "pki"
+  type                      = "pki"
   default_lease_ttl_seconds = 2764800  # 32  days
   max_lease_ttl_seconds     = 31536000 # 1 year
 }
@@ -22,8 +28,6 @@ resource "vault_pki_secret_backend_role" "role" {
 }
 
 resource "vault_pki_secret_backend_root_cert" "root_cert" {
-  depends_on = [vault_mount.pki]
-
   backend = vault_mount.pki.path
 
   type                 = "internal"

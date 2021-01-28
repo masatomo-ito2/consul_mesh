@@ -7,13 +7,17 @@ variable "region" {
 }
 
 variable "env" {
-	type = string
+  type = string
 }
 
 variable "location" {
-	type = string
+  type = string
 }
 
 variable "rg_name" {
-	type = string
+  type = string
+}
+
+variable "aws_vault_account_id" {
+  type = string
 }

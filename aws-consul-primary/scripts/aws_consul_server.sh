@@ -8,6 +8,8 @@ logger() {
   echo "$DT $0: $1"
 }
 
+echo set -o vi >> /home/ubuntu/.bashrc
+
 logger "Running"
 
 # install hashistack
@@ -18,7 +20,7 @@ apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_re
 
 #packages
 apt update -y
-apt install consul-enterprise vault-enterprise nomad-enterprise libcap-dev jq redis-server -y
+apt install consul-enterprise vault-enterprise nomad-enterprise libcap-dev jq tree redis-server -y
 
 #metadata
 local_ipv4="$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4)"
@@ -33,6 +35,11 @@ CONNECT_TOKEN=$(vault token create -namespace=${tpl_namespace} -field token -pol
 
 mkdir -p /etc/vault-agent.d/
 mkdir -p /opt/consul/tls/
+
+# Approle auth
+echo ${tpl_role_id}   > /etc/vault-agent.d/role_id
+echo ${tpl_secret_id} > /etc/vault-agent.d/secret_id
+
 cat <<EOF> /etc/vault-agent.d/consul-ca-template.ctmpl
 {{ with secret "pki/cert/ca" }}
 {{ .Data.certificate }}
@@ -65,11 +72,13 @@ EOF
 cat <<EOF> /etc/vault-agent.d/vault.hcl
 pid_file = "/var/run/vault-agent-pidfile"
 auto_auth {
-  method "aws" {
-      mount_path = "auth/aws"
+  method "approle" {
+      mount_path = "auth/approle"
+			namespace = "${tpl_namespace}"
       config = {
-          type = "iam"
-          role = "consul"
+          role_id_file_path = "/etc/vault-agent.d/role_id"
+          secret_id_file_path = "/etc/vault-agent.d/secret_id"
+					remove_secret_id_file_after_reading = false
       }
   }
 }
