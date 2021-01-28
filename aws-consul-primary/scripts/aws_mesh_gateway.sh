@@ -8,6 +8,8 @@ logger() {
   echo "$DT $0: $1"
 }
 
+echo set -o vi >> /home/ubuntu/.bashrc
+
 logger "Running"
 
 # install hashistack
@@ -18,7 +20,7 @@ apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_re
 
 #packages
 apt update -y
-apt install consul-enterprise vault-enterprise nomad-enterprise libcap-dev jq redis-server -y
+apt install consul-enterprise vault-enterprise nomad-enterprise libcap-dev jq tree redis-server -y
 
 #metadata
 local_ipv4="$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4)"
@@ -26,9 +28,15 @@ public_ipv4="$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)"
 
 #vault
 export VAULT_ADDR="${tpl_vault_addr}"
+
 mkdir -p /etc/vault-agent.d/
+
+# AppRole auth
+echo ${tpl_role_id}   > /etc/vault-agent.d/role_id
+echo ${tpl_secret_id} > /etc/vault-agent.d/secret_id
+
 cat <<EOF> /etc/vault-agent.d/consul-ca-template.ctmpl
-{{ with secret "pki/cert/ca" }}{{ .Data.certificate }}{{ end }}
+{{ with secret "${tpl_namespace}/pki/cert/ca" }}{{ .Data.certificate }}{{ end }}
 EOF
 cat <<EOF> /etc/vault-agent.d/consul-acl-template.ctmpl
 acl = {
@@ -37,24 +45,32 @@ acl = {
   down_policy    = "extend-cache"
   enable_token_persistence = true
   tokens {
-    agent  = {{ with secret "kv/consul" }}"{{ .Data.data.master_token }}"{{ end }}
+    agent  = {{ with secret "${tpl_namespace}/kv/consul" }}"{{ .Data.data.master_token }}"{{ end }}
   }
 }
-encrypt = {{ with secret "kv/consul" }}"{{ .Data.data.gossip_key }}"{{ end }}
+encrypt = {{ with secret "${tpl_namespace}/kv/consul" }}"{{ .Data.data.gossip_key }}"{{ end }}
 EOF
 cat <<EOF> /etc/vault-agent.d/envoy-token-template.ctmpl
-{{ with secret "kv/consul" }}{{ .Data.data.master_token }}{{ end }}
+{{ with secret "${tpl_namespace}/kv/consul" }}{{ .Data.data.master_token }}{{ end }}
 EOF
 cat <<EOF> /etc/vault-agent.d/vault.hcl
 pid_file = "/var/run/vault-agent-pidfile"
 auto_auth {
-  method "aws" {
-      mount_path = "auth/aws"
-      config = {
-          type = "iam"
-          role = "consul"
-      }
+  method "approle" {
+		mount_path = "auth/approle"
+		namespace = "${tpl_namespace}"
+
+		config = {
+			role_id_file_path = "/etc/vault-agent.d/role_id"
+			secret_id_file_path = "/etc/vault-agent.d/secret_id"
+			remove_secret_id_file_after_reading = false
+		}
   }
+	sink "file" {
+		config = {
+			path = "/etc/vault-agent.d/token"
+		}
+	}
 }
 template {
   source      = "/etc/vault-agent.d/consul-ca-template.ctmpl"
@@ -93,8 +109,8 @@ sleep 10
 
 mkdir -p /opt/consul/tls/
 cat <<EOF> /etc/consul.d/consul.hcl
-datacenter = "aws-us-east-1"
-primary_datacenter = "aws-us-east-1"
+datacenter = "aws-${tpl_region}"
+primary_datacenter = "aws-${tpl_region}"
 advertise_addr = "$${local_ipv4}"
 client_addr = "0.0.0.0"
 ui = true

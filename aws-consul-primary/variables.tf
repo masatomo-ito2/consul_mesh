@@ -42,3 +42,6 @@ variable "secret_id" {
   type = string
 }
 
+variable "mgw_secret_id" {
+  type = string
+}

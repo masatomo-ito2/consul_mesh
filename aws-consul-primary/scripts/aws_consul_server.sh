@@ -41,17 +41,17 @@ echo ${tpl_role_id}   > /etc/vault-agent.d/role_id
 echo ${tpl_secret_id} > /etc/vault-agent.d/secret_id
 
 cat <<EOF> /etc/vault-agent.d/consul-ca-template.ctmpl
-{{ with secret "pki/cert/ca" }}
+{{ with secret "${tpl_namespace}/pki/cert/ca" }}
 {{ .Data.certificate }}
 {{ end }}
 EOF
 cat <<EOF> /etc/vault-agent.d/consul-cert-template.ctmpl
-{{ with secret "pki/issue/consul" "common_name=consul-server-0.server.aws-${tpl_region}.consul" "alt_names=consul-server-0.server.aws-${tpl_region}.consul,server.aws-${tpl_region}.consul,localhost" "ip_sans=127.0.0.1" "key_usage=DigitalSignature,KeyEncipherment" "ext_key_usage=ServerAuth,ClientAuth" }}
+{{ with secret "${tpl_namespace}/pki/issue/consul" "common_name=consul-server-0.server.aws-${tpl_region}.consul" "alt_names=consul-server-0.server.aws-${tpl_region}.consul,server.aws-${tpl_region}.consul,localhost" "ip_sans=127.0.0.1" "key_usage=DigitalSignature,KeyEncipherment" "ext_key_usage=ServerAuth,ClientAuth" }}
 {{ .Data.certificate }}
 {{ end }}
 EOF
 cat <<EOF> /etc/vault-agent.d/consul-key-template.ctmpl
-{{ with secret "pki/issue/consul" "common_name=consul-server-0.server.aws-${tpl_region}.consul" "alt_names=consul-server-0.server.aws-${tpl_region}.consul,server.aws-${tpl_region}.consul,localhost" "ip_sans=127.0.0.1" "key_usage=DigitalSignature,KeyEncipherment" "ext_key_usage=ServerAuth,ClientAuth" }}
+{{ with secret "${tpl_namespace}/pki/issue/consul" "common_name=consul-server-0.server.aws-${tpl_region}.consul" "alt_names=consul-server-0.server.aws-${tpl_region}.consul,server.aws-${tpl_region}.consul,localhost" "ip_sans=127.0.0.1" "key_usage=DigitalSignature,KeyEncipherment" "ext_key_usage=ServerAuth,ClientAuth" }}
 {{ .Data.private_key }}
 {{ end }}
 EOF
@@ -63,11 +63,11 @@ acl = {
   enable_token_persistence = true
   enable_token_replication = true
   tokens {
-    master = {{ with secret "kv/consul" }}"{{ .Data.data.master_token }}"{{ end }}
-    agent  = {{ with secret "kv/consul" }}"{{ .Data.data.master_token }}"{{ end }}
+    master = {{ with secret "${tpl_namespace}/kv/consul" }}"{{ .Data.data.master_token }}"{{ end }}
+    agent  = {{ with secret "${tpl_namespace}/kv/consul" }}"{{ .Data.data.master_token }}"{{ end }}
   }
 }
-encrypt = {{ with secret "kv/consul" }}"{{ .Data.data.gossip_key }}"{{ end }}
+encrypt = {{ with secret "${tpl_namespace}/kv/consul" }}"{{ .Data.data.gossip_key }}"{{ end }}
 EOF
 cat <<EOF> /etc/vault-agent.d/vault.hcl
 pid_file = "/var/run/vault-agent-pidfile"
@@ -81,6 +81,11 @@ auto_auth {
 					remove_secret_id_file_after_reading = false
       }
   }
+	sink "file" {
+		config = {
+			path = "/etc/vault-agent.d/token"
+		}
+	}
 }
 template {
   source      = "/etc/vault-agent.d/consul-ca-template.ctmpl"
@@ -138,17 +143,19 @@ cat <<EOF> /etc/consul.d/server.json
   "ui": true,
   "connect": {
     "enable_mesh_gateway_wan_federation": true,
-    "enabled": true,
-    "ca_provider": "vault",
-    "ca_config": {
-      "address": "$${VAULT_ADDR}",
-      "token": "$${CONNECT_TOKEN}",
-      "root_pki_path": "connect-root/",
-      "intermediate_pki_path": "connect-intermediate-east/"
-    }
+    "enabled": true
   }
 }
 EOF
+
+#
+#    "ca_provider": "vault",
+#    "ca_config": {
+#      "address": "$${VAULT_ADDR}",
+#      "token": "$${CONNECT_TOKEN}",
+#      "root_pki_path": "${tpl_namespace}/connect-root/",
+#      "intermediate_pki_path": "${tpl_namespace}/connect-intermediate-east/"
+
 cat <<EOF> /etc/consul.d/tls.json
 {
   "verify_incoming": true,

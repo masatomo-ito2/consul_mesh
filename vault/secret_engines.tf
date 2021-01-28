@@ -2,7 +2,8 @@
 resource "vault_mount" "kv" {
   path        = "kv"
   type        = "kv"
-  description = "Key value secret engines"
+  options     = { version="2" }
+  description = "vault secrets enable -version=2 kv"
 }
 
 # Transit

@@ -79,6 +79,7 @@ module "aws-consul-primary" {
   admin_passwd                         = var.admin_passwd
   role_id                              = module.vault.aws_consul_role_id
   secret_id                            = module.vault.aws_consul_secret_id
+  mgw_secret_id                        = module.vault.aws_mgw_secret_id
 
   # consul stuff
   #master_token      = random_uuid.master_token.result
@@ -89,4 +90,12 @@ module "aws-consul-primary" {
 }
 
 # Azure
+
+/*
+module "azure-consul-secondary" {
+  source = "./azure-consul-secondary"
+
+  depends_on = [module.aws-consul-primary]
+}
+*/
 

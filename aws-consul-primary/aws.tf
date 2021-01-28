@@ -1,3 +1,7 @@
+data "aws_subnet" "public" {
+  id = var.public_subnets_id[0]
+}
+
 data "aws_ami" "ubuntu" {
   most_recent = true
 
@@ -30,21 +34,21 @@ resource "aws_security_group" "consul" {
     from_port   = 8300
     to_port     = 8300
     protocol    = "tcp"
-    cidr_blocks = ["10.1.0.0/16", "10.2.0.0/16"]
+    cidr_blocks = [data.aws_subnet.public.cidr_block]
   }
 
   ingress {
     from_port   = 8301
     to_port     = 8301
     protocol    = "tcp"
-    cidr_blocks = ["10.1.0.0/16", "10.2.0.0/16"]
+    cidr_blocks = [data.aws_subnet.public.cidr_block]
   }
 
   ingress {
     from_port   = 8301
     to_port     = 8301
     protocol    = "udp"
-    cidr_blocks = ["10.1.0.0/16", "10.2.0.0/16"]
+    cidr_blocks = [data.aws_subnet.public.cidr_block]
   }
 
   ingress {
@@ -119,5 +123,8 @@ data "template_file" "aws_mgw_init" {
     tpl_env        = var.env
     tpl_vault_addr = var.vault_addr
     tpl_region     = var.region
+    tpl_namespace  = var.vault_namespace
+    tpl_role_id    = var.role_id
+    tpl_secret_id  = var.mgw_secret_id
   }
 }

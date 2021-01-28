@@ -10,13 +10,21 @@ output "useful_logs" {
   value = <<EOF
 AppRole for Consul on AWS:
 	Role ID: ${module.vault.aws_consul_role_id}
-	Wrapped token(Secret ID): ${module.vault.aws_consul_secret_id}
+	Secret ID for Consul server: ${module.vault.aws_consul_secret_id}
+	Secret ID for Mesh Gateway : ${module.vault.aws_mgw_secret_id}
 
 Login to consul server:
 	ssh ubuntu@${module.aws-consul-primary.aws_consul_public_ip}
 
 Login to MGW:
 	ssh ubuntu@${module.aws-consul-primary.aws_mgw_public_ip}
+
+Consul UI:
+	http://${module.aws-consul-primary.aws_consul_public_ip}:8500
+		
+Master Token: 
+	export CONSUL_HTTP_TOKEN=${random_uuid.master_token.result}
+
 EOF
 }
 
