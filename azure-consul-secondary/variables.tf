@@ -21,3 +21,11 @@ variable "env" {
 variable "aws_mgw_public_ip" {
   type = string
 }
+
+variable "vault_addr" {
+  type = string
+}
+
+variable "vault_namespace" {
+  type = string
+}

@@ -98,6 +98,8 @@ module "azure-consul-secondary" {
   rg_location                            = data.terraform_remote_state.azure_state.outputs.rg_location
   azure_consul_user_assigned_identity_id = module.iam.azure_consul_user_assigned_identity_id
   env                                    = var.env
+  vault_addr                           = var.vault_addr
+  vault_namespace                      = var.vault_namespace
   aws_mgw_public_ip                      = module.aws-consul-primary.aws_mgw_public_ip
   ssh_public_key                         = var.ssh_public_key
 

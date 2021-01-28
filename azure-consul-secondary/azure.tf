@@ -70,7 +70,7 @@ resource "azurerm_linux_virtual_machine" "consul" {
   }
 
   computer_name = "consul-server-0"
-  custom_data   = data.template_file.azure-server-init.rendered
+  custom_data   = base64encode(data.template_file.azure-server-init.rendered)
 
   disable_password_authentication = true
 
@@ -90,10 +90,12 @@ resource "azurerm_linux_virtual_machine" "consul" {
 data "template_file" "azure-server-init" {
   template = file("${path.module}/scripts/azure_consul_server.sh")
   vars = {
-    ca_cert             = "test"
-    cert                = "test",
-    key                 = "test",
-    primary_wan_gateway = "${var.aws_mgw_public_ip}:443"
+    tpl_ca_cert             = "test"
+    tpl_cert                = "test",
+    tpl_key                 = "test",
+    tpl_primary_wan_gateway = "${var.aws_mgw_public_ip}:443"
+    tpl_vault_addr          = var.vault_addr
+    tpl_vault_namespace     = var.vault_namespace
   }
 }
 
@@ -119,9 +121,11 @@ resource "azurerm_network_interface" "consul-mgw" {
 data "template_file" "azure-mgw-init" {
   template = file("${path.module}/scripts/azure_mesh_gateway.sh")
   vars = {
-    env             = var.env
-    ca_cert         = "test"
-    subscription_id = data.azurerm_subscription.primary.subscription_id
+    tpl_env             = var.env
+    tpl_ca_cert         = "test"
+    tpl_subscription_id = data.azurerm_subscription.primary.subscription_id
+    tpl_vault_addr          = var.vault_addr
+    tpl_vault_namespace     = var.vault_namespace
   }
 }
 
@@ -151,7 +155,7 @@ resource "azurerm_linux_virtual_machine" "consul-mgw" {
   }
 
   computer_name = "consul-mgw"
-  custom_data   = data.template_file.azure-mgw-init.rendered
+  custom_data   = base64encode(data.template_file.azure-mgw-init.rendered)
 
   admin_username = "ubuntu"
 

@@ -1,5 +1,27 @@
 #!/bin/bash
 
+set -x
+exec > >(tee /tmp/tf-user-data.log|logger -t vault_bootstrap ) 2>&1
+
+logger() {
+	DT=$(date '+%Y/%m/%d %H:%M:%S')
+  echo "$DT $0: $1"
+}
+
+echo set -o vi >> /home/ubuntu/.bashrc
+
+logger "Running"
+
+# install hashistack
+apt update -y
+apt install software-properties-common -y
+curl -fsSL https://apt.releases.hashicorp.com/gpg | apt-key add -
+apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+
+#packages
+apt update -y
+apt install consul-enterprise vault-enterprise nomad-enterprise libcap-dev jq tree redis-server -y
+
 #metadata
 local_ipv4="$(curl -s -H Metadata:true --noproxy "*" "http://169.254.169.254/metadata/instance/network/interface/0/ipv4/ipAddress/0/privateIpAddress?api-version=2017-08-01&format=text")"
 public_ipv4="$(curl -s -H Metadata:true --noproxy "*" "http://169.254.169.254/metadata/instance/network/interface/0/ipv4/ipAddress/0/publicIpAddress?api-version=2017-08-01&format=text")"

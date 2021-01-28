@@ -1,7 +1,7 @@
 #!/bin/bash
 
 set -x
-exec > >(tee /tmp/tf-user-data.log|logger -t vault_bootstrap ) 2>&1
+exec > >(tee /tmp/tf-user-data.log|logger -t bootstrap ) 2>&1
 
 logger() {
 	DT=$(date '+%Y/%m/%d %H:%M:%S')

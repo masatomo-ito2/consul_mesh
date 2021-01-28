@@ -1,17 +1,40 @@
 #!/bin/bash
 
+set -x
+exec > >(tee /tmp/tf-user-data.log|logger -t bootstrap ) 2>&1
+
+logger() {
+	DT=$(date '+%Y/%m/%d %H:%M:%S')
+  echo "$DT $0: $1"
+}
+
+echo set -o vi >> /home/ubuntu/.bashrc
+
+logger "Running"
+
+# install hashistack
+apt update -y
+apt install software-properties-common -y
+curl -fsSL https://apt.releases.hashicorp.com/gpg | apt-key add -
+apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+
+#packages
+apt update -y
+apt install consul-enterprise vault-enterprise nomad-enterprise libcap-dev jq tree redis-server -y
+
 #metadata
 local_ipv4=$(curl -H Metadata:true --noproxy "*" "http://169.254.169.254/metadata/instance/network/interface/0/ipv4/ipAddress/0/privateIpAddress?api-version=2017-08-01&format=text")
 
 #vault
 az login --identity
-export VAULT_ADDR="http://$(az vm show -g $(curl -s -H Metadata:true "http://169.254.169.254/metadata/instance?api-version=2017-08-01" | jq -r '.compute | .resourceGroupName') -n vault-server-vm -d | jq -r .publicIps):8200"
+export VAULT_ADDR="${tpl_vault_addr}
 export VAULT_TOKEN=$(vault write -field=token auth/azure/login -field=token role="consul" \
      jwt="$(curl -s 'http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fmanagement.azure.com%2F' -H Metadata:true | jq -r '.access_token')")
 CONNECT_TOKEN=$(vault token create -field token -policy connect -period 8h -orphan)
 
 mkdir -p /etc/vault-agent.d/
 mkdir -p /opt/consul/tls/
+
 cat <<EOF> /etc/vault-agent.d/consul-ca-template.ctmpl
 {{ with secret "pki/cert/ca" }}
 {{ .Data.certificate }}
