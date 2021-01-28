@@ -148,6 +148,7 @@ cat <<EOF> /etc/consul.d/server.json
 }
 EOF
 
+### XXX Old setting (won't work with Vault namespace...
 #
 #    "ca_provider": "vault",
 #    "ca_config": {
@@ -155,6 +156,7 @@ EOF
 #      "token": "$${CONNECT_TOKEN}",
 #      "root_pki_path": "${tpl_namespace}/connect-root/",
 #      "intermediate_pki_path": "${tpl_namespace}/connect-intermediate-east/"
+#
 
 cat <<EOF> /etc/consul.d/tls.json
 {

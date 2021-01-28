@@ -91,11 +91,16 @@ module "aws-consul-primary" {
 
 # Azure
 
-/*
 module "azure-consul-secondary" {
   source = "./azure-consul-secondary"
 
+  rg_name                                = data.terraform_remote_state.azure_state.outputs.rg_name
+  rg_location                            = data.terraform_remote_state.azure_state.outputs.rg_location
+  azure_consul_user_assigned_identity_id = module.iam.azure_consul_user_assigned_identity_id
+  env                                    = var.env
+  aws_mgw_public_ip                      = module.aws-consul-primary.aws_mgw_public_ip
+  ssh_public_key                         = var.ssh_public_key
+
   depends_on = [module.aws-consul-primary]
 }
-*/
 
