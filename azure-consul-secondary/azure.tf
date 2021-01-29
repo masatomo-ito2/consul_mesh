@@ -95,7 +95,9 @@ data "template_file" "azure-server-init" {
     tpl_key                 = "test",
     tpl_primary_wan_gateway = "${var.aws_mgw_public_ip}:443"
     tpl_vault_addr          = var.vault_addr
-    tpl_vault_namespace     = var.vault_namespace
+    tpl_namespace     = var.vault_namespace
+    tpl_aws_region          = var.aws_region
+    tpl_azure_region        = var.rg_name
   }
 }
 
@@ -124,8 +126,10 @@ data "template_file" "azure-mgw-init" {
     tpl_env             = var.env
     tpl_ca_cert         = "test"
     tpl_subscription_id = data.azurerm_subscription.primary.subscription_id
-    tpl_vault_addr          = var.vault_addr
-    tpl_vault_namespace     = var.vault_namespace
+    tpl_vault_addr      = var.vault_addr
+    tpl_vault_namespace = var.vault_namespace
+    tpl_aws_region      = var.aws_region
+    tpl_azure_region    = var.rg_name
   }
 }
 

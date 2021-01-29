@@ -1,7 +1,7 @@
 #!/bin/bash
 
 set -x
-exec > >(tee /tmp/tf-user-data.log|logger -t bootstrap ) 2>&1
+exec > >(tee /tmp/tf-user-data.log|logger -t _bootstrap ) 2>&1
 
 logger() {
 	DT=$(date '+%Y/%m/%d %H:%M:%S')
@@ -32,21 +32,24 @@ export VAULT_TOKEN=$(vault write -field=token auth/azure/login -field=token role
      jwt="$(curl -s 'http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fmanagement.azure.com%2F' -H Metadata:true | jq -r '.access_token')")
 CONNECT_TOKEN=$(vault token create -field token -policy connect -period 8h -orphan)
 
+logger "VAULT_TOKEN: $${VAULT_TOKEN}"
+
+
 mkdir -p /etc/vault-agent.d/
 mkdir -p /opt/consul/tls/
 
 cat <<EOF> /etc/vault-agent.d/consul-ca-template.ctmpl
-{{ with secret "pki/cert/ca" }}
+{{ with secret "${tpl_vault_namespace}/pki/cert/ca" }}
 {{ .Data.certificate }}
 {{ end }}
 EOF
 cat <<EOF> /etc/vault-agent.d/consul-cert-template.ctmpl
-{{ with secret "pki/issue/consul" "common_name=consul-server-0.server.azure-west-us-2.consul" "alt_names=consul-server-0.server.azure-west-us-2.consul,server.azure-west-us-2.consul,localhost" "ip_sans=127.0.0.1" "key_usage=DigitalSignature,KeyEncipherment" "ext_key_usage=ServerAuth,ClientAuth" }}
+{{ with secret "${tpl_vault_namespace}/pki/issue/consul" "common_name=consul-server-0.server.azure-west-us-2.consul" "alt_names=consul-server-0.server.azure-west-us-2.consul,server.azure-west-us-2.consul,localhost" "ip_sans=127.0.0.1" "key_usage=DigitalSignature,KeyEncipherment" "ext_key_usage=ServerAuth,ClientAuth" }}
 {{ .Data.certificate }}
 {{ end }}
 EOF
 cat <<EOF> /etc/vault-agent.d/consul-key-template.ctmpl
-{{ with secret "pki/issue/consul" "common_name=consul-server-0.server.azure-west-us-2.consul" "alt_names=consul-server-0.server.azure-west-us-2.consul,server.azure-west-us-2.consul,localhost" "ip_sans=127.0.0.1" "key_usage=DigitalSignature,KeyEncipherment" "ext_key_usage=ServerAuth,ClientAuth" }}
+{{ with secret "${tpl_vault_namespace}/pki/issue/consul" "common_name=consul-server-0.server.azure-west-us-2.consul" "alt_names=consul-server-0.server.azure-west-us-2.consul,server.azure-west-us-2.consul,localhost" "ip_sans=127.0.0.1" "key_usage=DigitalSignature,KeyEncipherment" "ext_key_usage=ServerAuth,ClientAuth" }}
 {{ .Data.private_key }}
 {{ end }}
 EOF
@@ -58,22 +61,28 @@ acl = {
   enable_token_persistence = true
   enable_token_replication = true
   tokens {
-    agent  = {{ with secret "kv/consul" }}"{{ .Data.data.master_token }}"{{ end }}
-    replication = {{ with secret "kv/consul" }}"{{ .Data.data.replication_token }}"{{ end }}
+    agent  = {{ with secret "${tpl_vault_namespace}/kv/consul" }}"{{ .Data.data.master_token }}"{{ end }}
+    replication = {{ with secret "${tpl_vault_namespace}/kv/consul" }}"{{ .Data.data.replication_token }}"{{ end }}
   }
 }
-encrypt = {{ with secret "kv/consul" }}"{{ .Data.data.gossip_key }}"{{ end }}
+encrypt = {{ with secret "${tpl_vault_namespace}/kv/consul" }}"{{ .Data.data.gossip_key }}"{{ end }}
 EOF
 cat <<EOF> /etc/vault-agent.d/vault.hcl
 pid_file = "/var/run/vault-agent-pidfile"
 auto_auth {
   method "azure" {
-      mount_path = "auth/azure"
-      config = {
-          role = "consul"
-          resource = "https://management.azure.com/"
-      }
+		mount_path = "auth/azure"
+		namespace  = "${tpl_vault_namespace}"
+		config = {
+				role = "consul"
+				resource = "https://management.azure.com/"
+		}
   }
+	sink "file" {
+		config = {
+			path = "/etc/vault-agent.d/token"
+		}
+	}
 }
 template {
   source      = "/etc/vault-agent.d/consul-ca-template.ctmpl"
@@ -119,8 +128,8 @@ sleep 10
 #config
 cat <<EOF> /etc/consul.d/server.json
 {
-  "datacenter": "azure-west-us-2",
-  "primary_datacenter": "aws-us-east-1",
+  "datacenter": "azure-${tpl_azure_region}",
+  "primary_datacenter": "aws-${tpl_aws_region}",
   "server": true,
   "bootstrap_expect": 1,
   "advertise_addr": "$${local_ipv4}",
@@ -129,17 +138,10 @@ cat <<EOF> /etc/consul.d/server.json
   "log_level": "INFO",
   "node_name": "consul-server-0",
   "ui": true,
-  "primary_gateways" : ["${primary_wan_gateway}"],
+  "primary_gateways" : ["${tpl_primary_wan_gateway}"],
   "connect": {
     "enable_mesh_gateway_wan_federation": true,
-    "enabled": true,
-    "ca_provider": "vault",
-    "ca_config": {
-      "address": "$${VAULT_ADDR}",
-      "token": "$${CONNECT_TOKEN}",
-      "root_pki_path": "connect-root/",
-      "intermediate_pki_path": "connect-intermediate-west/"
-    }
+    "enabled": true
   }
 }
 EOF

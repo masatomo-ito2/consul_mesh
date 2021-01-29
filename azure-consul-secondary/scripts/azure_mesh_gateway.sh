@@ -29,9 +29,12 @@ public_ipv4="$(curl -s -H Metadata:true --noproxy "*" "http://169.254.169.254/me
 #vault
 az login --identity
 export VAULT_ADDR="http://$(az vm show -g $(curl -s -H Metadata:true "http://169.254.169.254/metadata/instance?api-version=2017-08-01" | jq -r '.compute | .resourceGroupName') -n vault-server-vm -d | jq -r .privateIps):8200"
+
+logger "VAULT_TOKEN: $${VAULT_TOKEN}"
+
 mkdir -p /etc/vault-agent.d/
 cat <<EOF> /etc/vault-agent.d/consul-ca-template.ctmpl
-{{ with secret "pki/cert/ca" }}{{ .Data.certificate }}{{ end }}
+{{ with secret "${tpl_vault_namespace}/pki/cert/ca" }}{{ .Data.certificate }}{{ end }}
 EOF
 cat <<EOF> /etc/vault-agent.d/consul-acl-template.ctmpl
 acl = {
@@ -41,24 +44,30 @@ acl = {
   enable_token_persistence = true
   enable_token_replication = true
   tokens {
-    agent  = {{ with secret "kv/consul" }}"{{ .Data.data.master_token }}"{{ end }}
+    agent  = {{ with secret "${tpl_vault_namespace}/kv/consul" }}"{{ .Data.data.master_token }}"{{ end }}
   }
 }
-encrypt = {{ with secret "kv/consul" }}"{{ .Data.data.gossip_key }}"{{ end }}
+encrypt = {{ with secret "${tpl_vault_namespace}/kv/consul" }}"{{ .Data.data.gossip_key }}"{{ end }}
 EOF
 cat <<EOF> /etc/vault-agent.d/envoy-token-template.ctmpl
-{{ with secret "kv/consul" }}{{ .Data.data.master_token }}{{ end }}
+{{ with secret "${tpl_vault_namespace}/kv/consul" }}{{ .Data.data.master_token }}{{ end }}
 EOF
 cat <<EOF> /etc/vault-agent.d/vault.hcl
 pid_file = "/var/run/vault-agent-pidfile"
 auto_auth {
   method "azure" {
-      mount_path = "auth/azure"
-      config = {
-          role = "consul"
-          resource = "https://management.azure.com/"
-      }
+		mount_path = "auth/azure"
+		namespace  = "${tpl_vault_namespace}"
+		config = {
+				role = "consul"
+				resource = "https://management.azure.com/"
+		}
   }
+	sink "file" {
+		config = {
+			path = "/etc/vault-agent.d/token"
+		}
+	}
 }
 template {
   source      = "/etc/vault-agent.d/consul-ca-template.ctmpl"
@@ -99,8 +108,8 @@ sleep 10
 #consul
 mkdir -p /opt/consul/tls/
 cat <<EOF> /etc/consul.d/consul.hcl
-datacenter = "azure-west-us-2"
-primary_datacenter = "aws-us-east-1"
+datacenter = "azure-${tpl_azure_region}"
+primary_datacenter = "aws-${tpl_aws_region}"
 advertise_addr = "$${local_ipv4}"
 client_addr = "0.0.0.0"
 ui = true
@@ -112,7 +121,7 @@ log_level = "INFO"
 ports = {
   grpc = 8502
 }
-retry_join = ["provider=azure tag_name=Env tag_value=consul-${env} subscription_id=${subscription_id}"]
+retry_join = ["provider=azure tag_name=Env tag_value=consul-${tpl_env} subscription_id=${tpl_subscription_id}"]
 EOF
 cat <<EOF> /etc/consul.d/tls.hcl
 ca_file = "/opt/consul/tls/ca-cert.pem"

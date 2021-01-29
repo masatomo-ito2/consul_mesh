@@ -45,8 +45,9 @@ resource "random_string" "gossip_key" {
 module "vault" {
   source = "./vault"
 
-  admin_passwd            = var.admin_passwd
-  aws_consul_iam_role_arn = module.iam.aws_consul_iam_role_arn
+  admin_passwd                                     = var.admin_passwd
+  aws_consul_iam_role_arn                          = module.iam.aws_consul_iam_role_arn
+  azure_consul_user_assigned_identity_principal_id = module.iam.azure_consul_user_assigned_identity_principal_id
 }
 
 # Put secrets into vault
@@ -97,11 +98,13 @@ module "azure-consul-secondary" {
   rg_name                                = data.terraform_remote_state.azure_state.outputs.rg_name
   rg_location                            = data.terraform_remote_state.azure_state.outputs.rg_location
   azure_consul_user_assigned_identity_id = module.iam.azure_consul_user_assigned_identity_id
-  env                                    = var.env
-  vault_addr                           = var.vault_addr
-  vault_namespace                      = var.vault_namespace
-  aws_mgw_public_ip                      = module.aws-consul-primary.aws_mgw_public_ip
-  ssh_public_key                         = var.ssh_public_key
+  # azure_consul_user_assigned_identity_principal_id = module.azure_consul_user_assigned_identity_principal_id
+  env               = var.env
+  vault_addr        = var.vault_addr
+  vault_namespace   = var.vault_namespace
+  aws_mgw_public_ip = module.aws-consul-primary.aws_mgw_public_ip
+  ssh_public_key    = var.ssh_public_key
+  aws_region        = var.region
 
   depends_on = [module.aws-consul-primary]
 }

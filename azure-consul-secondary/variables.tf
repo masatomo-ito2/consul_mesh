@@ -14,6 +14,12 @@ variable "azure_consul_user_assigned_identity_id" {
   type = string
 }
 
+/*
+variable "azure_consul_user_assigned_identity_principal_id" {
+  type = string
+}
+*/
+
 variable "env" {
   type = string
 }
@@ -27,5 +33,9 @@ variable "vault_addr" {
 }
 
 variable "vault_namespace" {
+  type = string
+}
+
+variable "aws_region" {
   type = string
 }
