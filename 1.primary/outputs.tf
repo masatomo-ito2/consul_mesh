@@ -1,3 +1,7 @@
+output "region" {
+	value = var.region
+}
+
 output "vault_namespace" {
 	value = var.vault_namespace
 }
@@ -11,7 +15,7 @@ output "env" {
 }
 
 output "azure_consul_user_assigned_identity_id" {
-	value = module.iam.azure_consul_user_assigned_identiy_id
+	value = module.iam.azure_consul_user_assigned_identity_id
 }
 
 output "consul_master_token" {

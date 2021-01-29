@@ -17,7 +17,3 @@ variable "location" {
 variable "rg_name" {
   type = string
 }
-
-variable "aws_vault_account_id" {
-  type = string
-}

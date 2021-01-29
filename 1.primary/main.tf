@@ -31,7 +31,6 @@ module "iam" {
   env                  = var.env
   location             = data.terraform_remote_state.azure_state.outputs.rg_location
   rg_name              = data.terraform_remote_state.azure_state.outputs.rg_name
-  aws_vault_account_id = var.aws_vault_account_id
 }
 
 

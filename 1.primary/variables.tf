@@ -35,14 +35,6 @@ variable "admin_passwd" {
   sensitive = true
 }
 
-variable "aws_vault_account_id" {
-  type = string
-}
-
-variable "ssh_public_key" {
-  type = string
-}
-
 variable "azure_tenant_id" {
   type = string
 }
