@@ -13,24 +13,25 @@ AppRole for Consul on AWS:
 	Secret ID for Consul server: ${module.vault.aws_consul_secret_id}
 	Secret ID for Mesh Gateway : ${module.vault.aws_mgw_secret_id}
 
+Master Token: 
+	export CONSUL_HTTP_TOKEN=${module.vault.master_token}
+
 === AWS ===
-Login to consul server:
+SSH to consul server:
 	ssh ubuntu@${module.aws-consul-primary.aws_consul_public_ip}
 
-Login to MGW:
+SSH to MGW:
 	ssh ubuntu@${module.aws-consul-primary.aws_mgw_public_ip}
 
 Consul UI:
 	http://${module.aws-consul-primary.aws_consul_public_ip}:8500
 		
-Master Token: 
-	export CONSUL_HTTP_TOKEN=${random_uuid.master_token.result}
 
 === Azure ===
-Login to consul server:
+SSH to consul server:
 	ssh ubuntu@${module.azure-consul-secondary.azure_consul_public_ip}
 
-Login to MGW:
+SSH to MGW:
 	ssh ubuntu@${module.azure-consul-secondary.azure_mgw_public_ip}
 
 Consul UI:

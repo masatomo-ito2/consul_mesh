@@ -62,12 +62,7 @@ module "aws-consul-primary" {
   secret_id                            = module.vault.aws_consul_secret_id
   mgw_secret_id                        = module.vault.aws_mgw_secret_id
 
-  # consul stuff
-  #master_token      = random_uuid.master_token.result
-  #replication_token = random_uuid.replication_token
-  #gossip_key        = base64encode(random_string.gossip_key.result)
-
-  depends_on = [vault_generic_secret.consul]
+  depends_on = [ module.vault ]
 }
 
 # Azure
