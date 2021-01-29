@@ -34,12 +34,6 @@ module "iam" {
   aws_vault_account_id = var.aws_vault_account_id
 }
 
-# Master tokens
-resource "random_uuid" "master_token" {}
-resource "random_uuid" "replication_token" {}
-resource "random_string" "gossip_key" {
-  length = 32
-}
 
 # Set up Vault
 module "vault" {
@@ -48,22 +42,8 @@ module "vault" {
   admin_passwd                                     = var.admin_passwd
   aws_consul_iam_role_arn                          = module.iam.aws_consul_iam_role_arn
   azure_consul_user_assigned_identity_principal_id = module.iam.azure_consul_user_assigned_identity_principal_id
+  azure_tenant_id                                  = var.azure_tenant_id
 }
-
-# Put secrets into vault
-resource "vault_generic_secret" "consul" {
-  depends_on = [module.vault]
-  path       = "kv/consul"
-
-  data_json = <<EOT
-{
-  "master_token": "${random_uuid.master_token.result}",
-	"replication_token": "${random_uuid.replication_token.result}",
-	"gossip_key": "${base64encode(random_string.gossip_key.result)}"
-}
-EOT
-}
-
 
 # AWS
 module "aws-consul-primary" {

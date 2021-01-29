@@ -22,12 +22,16 @@ apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_re
 apt update -y
 apt install consul-enterprise vault-enterprise nomad-enterprise libcap-dev jq tree redis-server -y
 
+# install az cli
+curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+
 #metadata
 local_ipv4="$(curl -s -H Metadata:true --noproxy "*" "http://169.254.169.254/metadata/instance/network/interface/0/ipv4/ipAddress/0/privateIpAddress?api-version=2017-08-01&format=text")"
 public_ipv4="$(curl -s -H Metadata:true --noproxy "*" "http://169.254.169.254/metadata/instance/network/interface/0/ipv4/ipAddress/0/publicIpAddress?api-version=2017-08-01&format=text")"
 
 #vault
 az login --identity
+export VAULT_NAMESPACE=${tpl_vault_namespace}
 export VAULT_ADDR="http://$(az vm show -g $(curl -s -H Metadata:true "http://169.254.169.254/metadata/instance?api-version=2017-08-01" | jq -r '.compute | .resourceGroupName') -n vault-server-vm -d | jq -r .privateIps):8200"
 
 logger "VAULT_TOKEN: $${VAULT_TOKEN}"

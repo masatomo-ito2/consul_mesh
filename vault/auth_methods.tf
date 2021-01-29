@@ -17,6 +17,18 @@ resource "vault_auth_backend" "azure" {
 # Azure auth
 
 /*
+vault write auth/azure/config \
+    tenant_id="$(az account show | jq -r .tenantId)" \
+    resource="https://management.azure.com/"
+*/
+
+resource "vault_azure_auth_backend_config" "azure_config" {
+  backend   = vault_auth_backend.azure.path
+  tenant_id = var.azure_tenant_id
+  resource  = "https://management.azure.com/"
+}
+
+/*
  vault write auth/azure/role/consul \
   policies=consul,admin ttl=30m \
   bound_service_principal_ids="${AZURE_CONSUL_SERVICE_PRINCIPAL_ID}"
@@ -25,11 +37,12 @@ resource "vault_auth_backend" "azure" {
 resource "vault_azure_auth_backend_role" "azure_role" {
   backend                     = vault_auth_backend.azure.path
   role                        = "consul"
-  bound_service_principal_ids = [ var.azure_consul_user_assigned_identity_principal_id ]
+  bound_service_principal_ids = [var.azure_consul_user_assigned_identity_principal_id]
   token_ttl                   = 3600
   token_max_ttl               = 36000
   token_policies              = ["default", "admin", "consul"]
 }
+
 
 # AWS auth
 

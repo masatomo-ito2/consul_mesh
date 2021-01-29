@@ -42,3 +42,7 @@ variable "aws_vault_account_id" {
 variable "ssh_public_key" {
   type = string
 }
+
+variable "azure_tenant_id" {
+  type = string
+}

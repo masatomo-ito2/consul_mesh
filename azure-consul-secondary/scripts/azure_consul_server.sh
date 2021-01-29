@@ -22,12 +22,16 @@ apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_re
 apt update -y
 apt install consul-enterprise vault-enterprise nomad-enterprise libcap-dev jq tree redis-server -y
 
+# install az cli
+curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+
 #metadata
 local_ipv4=$(curl -H Metadata:true --noproxy "*" "http://169.254.169.254/metadata/instance/network/interface/0/ipv4/ipAddress/0/privateIpAddress?api-version=2017-08-01&format=text")
 
 #vault
 az login --identity
-export VAULT_ADDR="${tpl_vault_addr}
+export VAULT_ADDR="${tpl_vault_addr}"
+export VAULT_NAMESPACE=${tpl_vault_namespace}
 export VAULT_TOKEN=$(vault write -field=token auth/azure/login -field=token role="consul" \
      jwt="$(curl -s 'http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fmanagement.azure.com%2F' -H Metadata:true | jq -r '.access_token')")
 CONNECT_TOKEN=$(vault token create -field token -policy connect -period 8h -orphan)
@@ -44,12 +48,12 @@ cat <<EOF> /etc/vault-agent.d/consul-ca-template.ctmpl
 {{ end }}
 EOF
 cat <<EOF> /etc/vault-agent.d/consul-cert-template.ctmpl
-{{ with secret "${tpl_vault_namespace}/pki/issue/consul" "common_name=consul-server-0.server.azure-west-us-2.consul" "alt_names=consul-server-0.server.azure-west-us-2.consul,server.azure-west-us-2.consul,localhost" "ip_sans=127.0.0.1" "key_usage=DigitalSignature,KeyEncipherment" "ext_key_usage=ServerAuth,ClientAuth" }}
+{{ with secret "${tpl_vault_namespace}/pki/issue/consul" "common_name=consul-server-0.server.azure-${tpl_azure_region}.consul" "alt_names=consul-server-0.server.azure-${tpl_azure_region}.consul,server.azure-${tpl_azure_region}.consul,localhost" "ip_sans=127.0.0.1" "key_usage=DigitalSignature,KeyEncipherment" "ext_key_usage=ServerAuth,ClientAuth" }}
 {{ .Data.certificate }}
 {{ end }}
 EOF
 cat <<EOF> /etc/vault-agent.d/consul-key-template.ctmpl
-{{ with secret "${tpl_vault_namespace}/pki/issue/consul" "common_name=consul-server-0.server.azure-west-us-2.consul" "alt_names=consul-server-0.server.azure-west-us-2.consul,server.azure-west-us-2.consul,localhost" "ip_sans=127.0.0.1" "key_usage=DigitalSignature,KeyEncipherment" "ext_key_usage=ServerAuth,ClientAuth" }}
+{{ with secret "${tpl_vault_namespace}/pki/issue/consul" "common_name=consul-server-0.server.azure-${tpl_azure_region}.consul" "alt_names=consul-server-0.server.azure-${tpl_azure_region}.consul,server.azure-${tpl_azure_region}.consul,localhost" "ip_sans=127.0.0.1" "key_usage=DigitalSignature,KeyEncipherment" "ext_key_usage=ServerAuth,ClientAuth" }}
 {{ .Data.private_key }}
 {{ end }}
 EOF
