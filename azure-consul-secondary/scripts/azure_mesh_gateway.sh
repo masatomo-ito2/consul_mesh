@@ -32,9 +32,7 @@ public_ipv4="$(curl -s -H Metadata:true --noproxy "*" "http://169.254.169.254/me
 #vault
 az login --identity
 export VAULT_NAMESPACE=${tpl_vault_namespace}
-export VAULT_ADDR="http://$(az vm show -g $(curl -s -H Metadata:true "http://169.254.169.254/metadata/instance?api-version=2017-08-01" | jq -r '.compute | .resourceGroupName') -n vault-server-vm -d | jq -r .privateIps):8200"
-
-logger "VAULT_TOKEN: $${VAULT_TOKEN}"
+export VAULT_ADDR=${tpl_vault_addr}
 
 mkdir -p /etc/vault-agent.d/
 cat <<EOF> /etc/vault-agent.d/consul-ca-template.ctmpl
