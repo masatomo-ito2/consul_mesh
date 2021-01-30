@@ -14,11 +14,6 @@ variable "tfc_azure_ws" {
   type = string
 }
 
-variable "admin_passwd" {
-  type      = string
-  sensitive = true
-}
-
 variable "aws_vault_account_id" {
   type = string
 }

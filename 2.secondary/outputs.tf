@@ -18,6 +18,9 @@ Consul UI:
 SSH to consul server:
 	ssh ubuntu@${module.azure-consul-secondary.azure_consul_public_ip}
 
+SSH to consul client:
+	ssh ubuntu@${module.azure-consul-secondary.azure_consul_client_public_ip}
+
 SSH to MGW:
 	ssh ubuntu@${module.azure-consul-secondary.azure_mgw_public_ip}
 

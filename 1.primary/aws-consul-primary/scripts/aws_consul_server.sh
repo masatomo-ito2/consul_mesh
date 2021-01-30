@@ -29,9 +29,13 @@ logger "My local IP is $${local_ipv4}"
 
 #vault
 export VAULT_ADDR="${tpl_vault_addr}"
-export VAULT_NAMESPACE="${tpl_namespace}"
+
+logger "VAULT_ADDR: $${VAULT_ADDR}"
+
 # vault login -method=aws role=consul
 vault login -method=userpass -namespace=${tpl_namespace} username=admin password=${tpl_admin_passwd}
+
+
 CONNECT_TOKEN=$(vault token create -namespace=${tpl_namespace} -field token -policy connect -orphan)
 
 mkdir -p /etc/vault-agent.d/
@@ -43,17 +47,17 @@ echo ${tpl_role_id}   > /etc/vault-agent.d/role_id
 echo ${tpl_secret_id} > /etc/vault-agent.d/secret_id
 
 cat <<EOF> /etc/vault-agent.d/consul-ca-template.ctmpl
-{{ with secret "${tpl_namespace}/pki/cert/ca" }}
+{{ with secret "pki/cert/ca" }}
 {{ .Data.certificate }}
 {{ end }}
 EOF
 cat <<EOF> /etc/vault-agent.d/consul-cert-template.ctmpl
-{{ with secret "${tpl_namespace}/pki/issue/consul" "common_name=consul-server-0.server.aws-${tpl_region}.consul" "alt_names=consul-server-0.server.aws-${tpl_region}.consul,server.aws-${tpl_region}.consul,localhost" "ip_sans=127.0.0.1" "key_usage=DigitalSignature,KeyEncipherment" "ext_key_usage=ServerAuth,ClientAuth" }}
+{{ with secret "pki/issue/consul" "common_name=consul-server-0.server.aws-${tpl_region}.consul" "alt_names=consul-server-0.server.aws-${tpl_region}.consul,server.aws-${tpl_region}.consul,localhost" "ip_sans=127.0.0.1" "key_usage=DigitalSignature,KeyEncipherment" "ext_key_usage=ServerAuth,ClientAuth" }}
 {{ .Data.certificate }}
 {{ end }}
 EOF
 cat <<EOF> /etc/vault-agent.d/consul-key-template.ctmpl
-{{ with secret "${tpl_namespace}/pki/issue/consul" "common_name=consul-server-0.server.aws-${tpl_region}.consul" "alt_names=consul-server-0.server.aws-${tpl_region}.consul,server.aws-${tpl_region}.consul,localhost" "ip_sans=127.0.0.1" "key_usage=DigitalSignature,KeyEncipherment" "ext_key_usage=ServerAuth,ClientAuth" }}
+{{ with secret "pki/issue/consul" "common_name=consul-server-0.server.aws-${tpl_region}.consul" "alt_names=consul-server-0.server.aws-${tpl_region}.consul,server.aws-${tpl_region}.consul,localhost" "ip_sans=127.0.0.1" "key_usage=DigitalSignature,KeyEncipherment" "ext_key_usage=ServerAuth,ClientAuth" }}
 {{ .Data.private_key }}
 {{ end }}
 EOF
@@ -65,11 +69,11 @@ acl = {
   enable_token_persistence = true
   enable_token_replication = true
   tokens {
-    master = {{ with secret "${tpl_namespace}/kv/consul" }}"{{ .Data.data.master_token }}"{{ end }}
-    agent  = {{ with secret "${tpl_namespace}/kv/consul" }}"{{ .Data.data.master_token }}"{{ end }}
+    master = {{ with secret "kv/consul" }}"{{ .Data.data.master_token }}"{{ end }}
+    agent  = {{ with secret "kv/consul" }}"{{ .Data.data.master_token }}"{{ end }}
   }
 }
-encrypt = {{ with secret "${tpl_namespace}/kv/consul" }}"{{ .Data.data.gossip_key }}"{{ end }}
+encrypt = {{ with secret "kv/consul" }}"{{ .Data.data.gossip_key }}"{{ end }}
 EOF
 cat <<EOF> /etc/vault-agent.d/vault.hcl
 pid_file = "/var/run/vault-agent-pidfile"
@@ -128,6 +132,8 @@ WantedBy=multi-user.target
 EOF
 sudo systemctl enable vault-agent.service
 sudo systemctl start vault-agent.service
+
+logger "wait for vault-agent to fetch secrets"
 sleep 10
 
 #consul
@@ -186,7 +192,10 @@ sudo service consul restart
 sleep 10
 
 # get consul token
-export CONSUL_HTTP_TOKEN=$(vault kv get -field=master_token kv/consul)
+export VAULT_ADDR="${tpl_vault_addr}"
+vault login -method=userpass -namespace=${tpl_namespace} username=admin password=${tpl_admin_passwd}
+
+export CONSUL_HTTP_TOKEN=$(vault kv get -namespace=${tpl_namespace} -field=master_token kv/consul)
 
 # Create anonymous ACL token
 cat <<EOF> /opt/consul/policies/anonymous.hcl
@@ -251,5 +260,6 @@ MeshGateway {
 EOF
 
 consul config write proxy-defaults.hcl
+
 
 exit 0

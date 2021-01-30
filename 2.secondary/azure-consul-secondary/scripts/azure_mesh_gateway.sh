@@ -123,7 +123,7 @@ log_level = "INFO"
 ports = {
   grpc = 8502
 }
-retry_join = ["provider=azure tag_name=Env tag_value=consul-${tpl_env} subscription_id=${tpl_subscription_id}"]
+retry_join = ["provider=azure tag_name=Name tag_value=consul-server subscription_id=${tpl_subscription_id}"]
 EOF
 cat <<EOF> /etc/consul.d/tls.hcl
 ca_file = "/opt/consul/tls/ca-cert.pem"

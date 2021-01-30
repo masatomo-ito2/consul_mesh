@@ -29,10 +29,12 @@ resource "vault_pki_secret_backend_role" "role" {
 }
 
 resource "vault_pki_secret_backend_root_cert" "root_cert" {
+	depends_on = [vault_mount.pki]
+
   backend = vault_mount.pki.path
 
   type                 = "internal"
-  common_name          = "Consul CA"
+  common_name          = "Root CA"
   ttl                  = "315360000"
   format               = "pem"
   private_key_format   = "der"

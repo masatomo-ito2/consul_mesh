@@ -32,6 +32,7 @@ local_ipv4=$(curl -H Metadata:true --noproxy "*" "http://169.254.169.254/metadat
 az login --identity
 export VAULT_ADDR="${tpl_vault_addr}"
 export VAULT_NAMESPACE=${tpl_vault_namespace}
+
 export VAULT_TOKEN=$(vault write -field=token auth/azure/login -field=token role="consul" \
      jwt="$(curl -s 'http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fmanagement.azure.com%2F' -H Metadata:true | jq -r '.access_token')")
 CONNECT_TOKEN=$(vault token create -field token -policy connect -period 8h -orphan)

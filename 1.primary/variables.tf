@@ -2,6 +2,10 @@ variable "tfc_org" {
   type = string
 }
 
+variable "tfc_vault_ws" {
+  type = string
+}
+
 variable "tfc_aws_ws" {
   type = string
 }
@@ -30,10 +34,6 @@ variable "vault_namespace" {
   type = string
 }
 
-variable "admin_passwd" {
-  type      = string
-  sensitive = true
-}
 
 variable "azure_tenant_id" {
   type = string

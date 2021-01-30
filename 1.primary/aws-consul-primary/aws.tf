@@ -73,6 +73,7 @@ resource "aws_security_group" "consul" {
   }
 }
 
+# Consul server
 resource "aws_instance" "consul" {
   instance_type               = "t3.small"
   ami                         = data.aws_ami.ubuntu.id
@@ -100,9 +101,38 @@ data "template_file" "init" {
     tpl_role_id      = var.role_id
     tpl_secret_id    = var.secret_id
   }
+}
+
+# Consul client
+resource "aws_instance" "consul_client" {
+  instance_type               = "t3.small"
+  ami                         = data.aws_ami.ubuntu.id
+  key_name                    = var.ssh_key_name
+  vpc_security_group_ids      = [aws_security_group.consul.id]
+  subnet_id                   = var.public_subnets_id[0]
+  associate_public_ip_address = true
+  user_data                   = data.template_file.client.rendered
+  iam_instance_profile        = var.aws_consul_iam_instance_profile_name
+  tags = {
+    Name = "consul-client"
+    Env  = "consul-${var.env}"
+  }
+}
+
+data "template_file" "client" {
+  template = file("${path.module}/scripts/aws_consul_client.sh")
+
+  vars = {
+    tpl_env          = var.env
+    tpl_vault_addr   = var.vault_addr
+    tpl_region       = var.region
+    tpl_namespace    = var.vault_namespace
+    tpl_admin_passwd = var.admin_passwd
+  }
 
 }
 
+# Mesh gateway
 resource "aws_instance" "mesh_gateway" {
   instance_type               = "t3.small"
   ami                         = data.aws_ami.ubuntu.id

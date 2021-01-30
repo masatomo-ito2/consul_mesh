@@ -36,7 +36,7 @@ echo ${tpl_role_id}   > /etc/vault-agent.d/role_id
 echo ${tpl_secret_id} > /etc/vault-agent.d/secret_id
 
 cat <<EOF> /etc/vault-agent.d/consul-ca-template.ctmpl
-{{ with secret "${tpl_namespace}/pki/cert/ca" }}{{ .Data.certificate }}{{ end }}
+{{ with secret "pki/cert/ca" }}{{ .Data.certificate }}{{ end }}
 EOF
 cat <<EOF> /etc/vault-agent.d/consul-acl-template.ctmpl
 acl = {
@@ -45,13 +45,13 @@ acl = {
   down_policy    = "extend-cache"
   enable_token_persistence = true
   tokens {
-    agent  = {{ with secret "${tpl_namespace}/kv/consul" }}"{{ .Data.data.master_token }}"{{ end }}
+    agent  = {{ with secret "kv/consul" }}"{{ .Data.data.master_token }}"{{ end }}
   }
 }
-encrypt = {{ with secret "${tpl_namespace}/kv/consul" }}"{{ .Data.data.gossip_key }}"{{ end }}
+encrypt = {{ with secret "kv/consul" }}"{{ .Data.data.gossip_key }}"{{ end }}
 EOF
 cat <<EOF> /etc/vault-agent.d/envoy-token-template.ctmpl
-{{ with secret "${tpl_namespace}/kv/consul" }}{{ .Data.data.master_token }}{{ end }}
+{{ with secret "kv/consul" }}{{ .Data.data.master_token }}{{ end }}
 EOF
 cat <<EOF> /etc/vault-agent.d/vault.hcl
 pid_file = "/var/run/vault-agent-pidfile"
