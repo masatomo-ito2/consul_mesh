@@ -126,6 +126,7 @@ data "template_file" "client" {
     tpl_env          = var.env
     tpl_vault_addr   = var.vault_addr
     tpl_region       = var.region
+    tpl_azure_region = var.azure_region
     tpl_namespace    = var.vault_namespace
     tpl_admin_passwd = var.admin_passwd
   }

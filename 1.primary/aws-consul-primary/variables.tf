@@ -6,6 +6,10 @@ variable "region" {
   type = string
 }
 
+variable "azure_region" {
+  type = string
+}
+
 variable "ssh_key_name" {
   type = string
 }

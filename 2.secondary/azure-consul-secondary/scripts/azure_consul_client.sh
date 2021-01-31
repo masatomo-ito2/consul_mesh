@@ -63,6 +63,7 @@ EOF
 # Consul configuration
 cat <<EOF> /etc/consul.d/consul.hcl
 datacenter = "azure-${tpl_azure_region}"
+primary_datacenter = "aws-${tpl_aws_region}"
 advertise_addr = "$${local_ipv4}"
 client_addr = "0.0.0.0"
 ui = true
@@ -118,7 +119,19 @@ sudo service consul restart
 sleep 15
 
 export CONSUL_HTTP_TOKEN=$${MASTER_TOKEN}
-SERVICE_TOKEN=$(consul acl token create -format=json -service-identity=web:azure-${tpl_azure_region} | jq -r .SecretID)
+SOCAT_SERVICE_TOKEN=$(consul acl token create -format=json -service-identity=socat:azure-${tpl_azure_region} | jq -r .SecretID)
+WEB_SERVICE_TOKEN=$(consul acl token create -format=json -service-identity=web:azure-${tpl_azure_region} | jq -r .SecretID)
+
+cat <<EOF> /etc/consul.d/socat.hcl
+service {
+  name = "socat",
+  port = 8181,
+  token = "$${SOCAT_SERVICE_TOKEN}",
+  connect {
+    sidecar_service {}
+  }
+}
+EOF
 
 cat <<EOF> /etc/consul.d/web.hcl
 service {

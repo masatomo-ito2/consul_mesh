@@ -67,6 +67,7 @@ module "aws-consul-primary" {
   ssh_key_name                         = var.ssh_key_name
   public_subnets_id                    = data.terraform_remote_state.aws_state.outputs.public_subnets_japan
   region                               = var.region
+  azure_region = data.terraform_remote_state.azure_state.outputs.rg_location
   aws_consul_iam_instance_profile_name = module.iam.aws_consul_iam_instance_profile_name
   env                                  = var.env
   vault_addr                           = var.vault_addr
