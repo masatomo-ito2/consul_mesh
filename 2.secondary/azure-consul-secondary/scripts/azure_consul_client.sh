@@ -120,7 +120,7 @@ sleep 15
 export CONSUL_HTTP_TOKEN=$${MASTER_TOKEN}
 SERVICE_TOKEN=$(consul acl token create -format=json -service-identity=web:azure-${tpl_azure_region} | jq -r .SecretID)
 
-cat <<EOF> /etc/consul.d/socat.hcl
+cat <<EOF> /etc/consul.d/web.hcl
 service {
   name = "web",
   port = 8080,
@@ -140,5 +140,8 @@ service {
   }
 }
 EOF
+
+consul intention create web socat
+consul reload
 
 exit 0

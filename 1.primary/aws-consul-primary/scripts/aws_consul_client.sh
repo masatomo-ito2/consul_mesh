@@ -91,6 +91,16 @@ sudo echo "*/28 * * * * sudo service consul restart" >> consul
 sudo crontab consul
 sudo rm consul
 
+# install envoy
+curl -L https://getenvoy.io/cli | bash -s -- -b /usr/local/bin
+getenvoy fetch standard:1.16.0
+cp /root/.getenvoy/builds/standard/*/linux_glibc/bin/envoy /usr/local/bin/envoy
+
+mkdir -p /etc/envoy
+cat <<EOF > /etc/envoy/consul.token
+$${MASTER_TOKEN}
+EOF
+
 #make sure the config was picked up
 sudo service consul restart
 
