@@ -116,12 +116,12 @@ sudo service consul restart
 
 # sample app
 
-sleep 15
+sleep 30
 
 export CONSUL_HTTP_TOKEN=$${MASTER_TOKEN}
 SOCAT_SERVICE_TOKEN=$(consul acl token create -format=json -service-identity=socat:azure-${tpl_azure_region} | jq -r .SecretID)
 
-cat <<EOF> /etc/consul.d/socat.hcl
+cat <<EOF> /home/ubuntu/socat.hcl
 service {
   name = "socat",
   port = 8181,
@@ -132,6 +132,6 @@ service {
 }
 EOF
 
-consul reload
+chown ubuntu:ubuntu /home/ubuntu/socat.hcl
 
 exit 0
