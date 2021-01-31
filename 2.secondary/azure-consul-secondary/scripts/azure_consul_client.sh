@@ -120,7 +120,6 @@ sleep 15
 
 export CONSUL_HTTP_TOKEN=$${MASTER_TOKEN}
 SOCAT_SERVICE_TOKEN=$(consul acl token create -format=json -service-identity=socat:azure-${tpl_azure_region} | jq -r .SecretID)
-WEB_SERVICE_TOKEN=$(consul acl token create -format=json -service-identity=web:azure-${tpl_azure_region} | jq -r .SecretID)
 
 cat <<EOF> /etc/consul.d/socat.hcl
 service {
@@ -133,28 +132,6 @@ service {
 }
 EOF
 
-cat <<EOF> /etc/consul.d/web.hcl
-service {
-  name = "web",
-  port = 8080,
-  token = "$${SERVICE_TOKEN}",
-  connect {
-    sidecar_service {
-      proxy {
-        upstreams = [
-          {
-            destination_name = "socat",
-            datacenter = "aws-${tpl_aws_region}",
-            local_bind_port = 8181
-          }
-        ]
-      }
-    }
-  }
-}
-EOF
-
-consul intention create web socat
 consul reload
 
 exit 0

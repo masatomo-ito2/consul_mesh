@@ -107,22 +107,10 @@ sudo service consul restart
 
 # sample apps
 
-sleep 15
+sleep 30
 
 export CONSUL_HTTP_TOKEN=$${MASTER_TOKEN}
 WEB_SERVICE_TOKEN=$(consul acl token create -format=json -service-identity=web:aws-${tpl_region} | jq -r .SecretID)
-SOCAT_SERVICE_TOKEN=$(consul acl token create -format=json -service-identity=socat:aws-${tpl_region} | jq -r .SecretID)
-
-cat <<EOF> /etc/consul.d/socat.hcl
-service {
-  name = "socat",
-  port = 8181,
-  token = "$${SOCAT_SERVICE_TOKEN}",
-  connect {
-    sidecar_service {}
-  }
-}
-EOF
 
 cat <<EOF> /etc/consul.d/web.hcl
 service {
