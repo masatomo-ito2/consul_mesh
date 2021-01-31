@@ -1,3 +1,3 @@
 variable "admin_passwd" {
-  type      = string
+  type = string
 }

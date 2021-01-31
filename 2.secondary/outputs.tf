@@ -7,6 +7,9 @@ Master Token:
 SSH to consul server:
 	ssh ubuntu@${data.terraform_remote_state.primary.outputs.aws_consul_public_ip}
 
+SSH to consul client:
+	ssh ubuntu@${data.terraform_remote_state.primary.outputs.aws_consul_client_public_ip}
+
 SSH to MGW:
 	ssh ubuntu@${data.terraform_remote_state.primary.outputs.aws_mgw_public_ip}
 

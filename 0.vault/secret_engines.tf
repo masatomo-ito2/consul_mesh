@@ -29,7 +29,7 @@ resource "vault_pki_secret_backend_role" "role" {
 }
 
 resource "vault_pki_secret_backend_root_cert" "root_cert" {
-	depends_on = [vault_mount.pki]
+  depends_on = [vault_mount.pki]
 
   backend = vault_mount.pki.path
 

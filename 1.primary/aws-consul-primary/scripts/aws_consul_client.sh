@@ -91,7 +91,35 @@ sudo echo "*/28 * * * * sudo service consul restart" >> consul
 sudo crontab consul
 sudo rm consul
 
+# Install envoy
+curl -L https://getenvoy.io/cli | bash -s -- -b /usr/local/bin
+getenvoy fetch standard:1.16.0
+cp /root/.getenvoy/builds/standard/*/linux_glibc/bin/envoy /usr/local/bin/envoy
+
+cat <<EOF> /etc/envoy/consul.token
+$${MASTER_TOKEN}
+EOF
+
+cat <<EOF > /etc/systemd/system/envoy.service
+[Unit]
+Description=Envoy
+After=network-online.target
+Wants=consul.service
+[Service]
+ExecStart=/usr/bin/consul connect envoy -expose-servers -gateway=mesh -register -service "mesh-gateway" -address "$${local_ipv4}:443" -wan-address "$${public_ipv4}:443" -token-file /etc/envoy/consul.token -- -l debug
+Restart=always
+RestartSec=5
+StartLimitIntervalSec=0
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl enable envoy.service
+sudo systemctl start envoy.service
+sleep 10
+
 #make sure the config was picked up
 sudo service consul restart
+sudo service envoy restart
 
 exit 0

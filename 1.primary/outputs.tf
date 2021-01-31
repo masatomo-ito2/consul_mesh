@@ -22,6 +22,10 @@ output "aws_consul_public_ip" {
   value = module.aws-consul-primary.aws_consul_public_ip
 }
 
+output "aws_consul_client_public_ip" {
+  value = module.aws-consul-primary.aws_consul_client_public_ip
+}
+
 output "aws_mgw_public_ip" {
   value = module.aws-consul-primary.aws_mgw_public_ip
 }
