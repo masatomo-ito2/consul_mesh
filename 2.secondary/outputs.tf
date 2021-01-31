@@ -1,7 +1,7 @@
 output "useful_logs" {
   value = <<EOF
 Master Token: 
-	export CONSUL_HTTP_TOKEN=${data.terraform_remote_state.primary.outputs.consul_master_token}
+	export CONSUL_HTTP_TOKEN=${data.terraform_remote_state.vault_state.outputs.master_token}
 
 === AWS ===
 SSH to consul server:

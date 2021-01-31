@@ -244,7 +244,7 @@ service_prefix "" {
 EOF
 
 consul acl policy create -name replication -rules @/opt/consul/policies/replication.hcl
-consul acl token create -policy-name replication -secret=$(vault kv get -field replication_token kv/consul)
+consul acl token create -policy-name replication -secret=$(vault kv get -namespace=${tpl_namespace} -field replication_token kv/consul)
 
 # Mesh default
 cat <<EOF> /opt/consul/policies/proxy-defaults.hcl
@@ -259,7 +259,7 @@ MeshGateway {
 }
 EOF
 
-consul config write proxy-defaults.hcl
+consul config write /opt/consul/policies/proxy-defaults.hcl
 
 
 exit 0

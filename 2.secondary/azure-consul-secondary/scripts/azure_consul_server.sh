@@ -31,7 +31,8 @@ local_ipv4=$(curl -H Metadata:true --noproxy "*" "http://169.254.169.254/metadat
 #vault
 az login --identity
 export VAULT_ADDR="${tpl_vault_addr}"
-export VAULT_NAMESPACE=${tpl_vault_namespace}
+
+logger "VAULT_ADDR: $${VAULT_ADDR}"
 
 export VAULT_TOKEN=$(vault write -field=token auth/azure/login -field=token role="consul" \
      jwt="$(curl -s 'http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fmanagement.azure.com%2F' -H Metadata:true | jq -r '.access_token')")
@@ -44,17 +45,17 @@ mkdir -p /etc/vault-agent.d/
 mkdir -p /opt/consul/tls/
 
 cat <<EOF> /etc/vault-agent.d/consul-ca-template.ctmpl
-{{ with secret "${tpl_vault_namespace}/pki/cert/ca" }}
+{{ with secret "/pki/cert/ca" }}
 {{ .Data.certificate }}
 {{ end }}
 EOF
 cat <<EOF> /etc/vault-agent.d/consul-cert-template.ctmpl
-{{ with secret "${tpl_vault_namespace}/pki/issue/consul" "common_name=consul-server-0.server.azure-${tpl_azure_region}.consul" "alt_names=consul-server-0.server.azure-${tpl_azure_region}.consul,server.azure-${tpl_azure_region}.consul,localhost" "ip_sans=127.0.0.1" "key_usage=DigitalSignature,KeyEncipherment" "ext_key_usage=ServerAuth,ClientAuth" }}
+{{ with secret "/pki/issue/consul" "common_name=consul-server-0.server.azure-${tpl_azure_region}.consul" "alt_names=consul-server-0.server.azure-${tpl_azure_region}.consul,server.azure-${tpl_azure_region}.consul,localhost" "ip_sans=127.0.0.1" "key_usage=DigitalSignature,KeyEncipherment" "ext_key_usage=ServerAuth,ClientAuth" }}
 {{ .Data.certificate }}
 {{ end }}
 EOF
 cat <<EOF> /etc/vault-agent.d/consul-key-template.ctmpl
-{{ with secret "${tpl_vault_namespace}/pki/issue/consul" "common_name=consul-server-0.server.azure-${tpl_azure_region}.consul" "alt_names=consul-server-0.server.azure-${tpl_azure_region}.consul,server.azure-${tpl_azure_region}.consul,localhost" "ip_sans=127.0.0.1" "key_usage=DigitalSignature,KeyEncipherment" "ext_key_usage=ServerAuth,ClientAuth" }}
+{{ with secret "/pki/issue/consul" "common_name=consul-server-0.server.azure-${tpl_azure_region}.consul" "alt_names=consul-server-0.server.azure-${tpl_azure_region}.consul,server.azure-${tpl_azure_region}.consul,localhost" "ip_sans=127.0.0.1" "key_usage=DigitalSignature,KeyEncipherment" "ext_key_usage=ServerAuth,ClientAuth" }}
 {{ .Data.private_key }}
 {{ end }}
 EOF
@@ -66,18 +67,18 @@ acl = {
   enable_token_persistence = true
   enable_token_replication = true
   tokens {
-    agent  = {{ with secret "${tpl_vault_namespace}/kv/consul" }}"{{ .Data.data.master_token }}"{{ end }}
-    replication = {{ with secret "${tpl_vault_namespace}/kv/consul" }}"{{ .Data.data.replication_token }}"{{ end }}
+    agent  = {{ with secret "/kv/consul" }}"{{ .Data.data.master_token }}"{{ end }}
+    replication = {{ with secret "/kv/consul" }}"{{ .Data.data.replication_token }}"{{ end }}
   }
 }
-encrypt = {{ with secret "${tpl_vault_namespace}/kv/consul" }}"{{ .Data.data.gossip_key }}"{{ end }}
+encrypt = {{ with secret "kv/consul" }}"{{ .Data.data.gossip_key }}"{{ end }}
 EOF
 cat <<EOF> /etc/vault-agent.d/vault.hcl
 pid_file = "/var/run/vault-agent-pidfile"
 auto_auth {
   method "azure" {
 		mount_path = "auth/azure"
-		namespace  = "${tpl_vault_namespace}"
+		namespace  = "${tpl_namespace}"
 		config = {
 				role = "consul"
 				resource = "https://management.azure.com/"
@@ -167,13 +168,9 @@ chown -R consul:consul /opt/consul/
 chown -R consul:consul /etc/consul.d/
 sudo systemctl enable consul.service
 sudo systemctl start consul.service
-sleep 15
+sleep 10
 
 # make sure the config was picked up
 sudo service consul restart
-
-# wait for consul to boot up
-sleep 30
-
 
 exit 0

@@ -100,7 +100,7 @@ data "template_file" "azure-server-init" {
   vars = {
     tpl_primary_wan_gateway = "${var.aws_mgw_public_ip}:443"
     tpl_vault_addr          = var.vault_addr
-    tpl_vault_namespace     = var.vault_namespace
+    tpl_namespace           = var.vault_namespace
     tpl_aws_region          = var.aws_region
     tpl_azure_region        = var.rg_location
   }
@@ -171,11 +171,11 @@ resource "azurerm_linux_virtual_machine" "consul_client" {
 data "template_file" "azure-client-init" {
   template = file("${path.module}/scripts/azure_consul_client.sh")
   vars = {
-    tpl_env             = var.env
+    tpl_env                 = var.env
     tpl_primary_wan_gateway = "${var.aws_mgw_public_ip}:443"
-    tpl_subscription_id = data.azurerm_subscription.primary.subscription_id
+    tpl_subscription_id     = data.azurerm_subscription.primary.subscription_id
     tpl_vault_addr          = var.vault_addr
-    tpl_vault_namespace     = var.vault_namespace
+    tpl_namespace           = var.vault_namespace
     tpl_aws_region          = var.aws_region
     tpl_azure_region        = var.rg_location
   }
@@ -207,7 +207,7 @@ data "template_file" "azure-mgw-init" {
     tpl_ca_cert         = "test"
     tpl_subscription_id = data.azurerm_subscription.primary.subscription_id
     tpl_vault_addr      = var.vault_addr
-    tpl_vault_namespace = var.vault_namespace
+    tpl_namespace       = var.vault_namespace
     tpl_aws_region      = var.aws_region
     tpl_azure_region    = var.rg_location
   }

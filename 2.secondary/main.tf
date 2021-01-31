@@ -10,6 +10,18 @@ data "terraform_remote_state" "primary" {
   }
 }
 
+# Remote state for Vault WS
+data "terraform_remote_state" "vault_state" {
+  backend = "remote"
+
+  config = {
+    organization = var.tfc_org
+    workspaces = {
+      name = var.tfc_vault_ws
+    }
+  }
+}
+
 # Remote state for AWS VPC
 data "terraform_remote_state" "aws_state" {
   backend = "remote"

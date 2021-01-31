@@ -31,12 +31,11 @@ public_ipv4="$(curl -s -H Metadata:true --noproxy "*" "http://169.254.169.254/me
 
 #vault
 az login --identity
-export VAULT_NAMESPACE=${tpl_vault_namespace}
 export VAULT_ADDR=${tpl_vault_addr}
 
 mkdir -p /etc/vault-agent.d/
 cat <<EOF> /etc/vault-agent.d/consul-ca-template.ctmpl
-{{ with secret "${tpl_vault_namespace}/pki/cert/ca" }}{{ .Data.certificate }}{{ end }}
+{{ with secret "pki/cert/ca" }}{{ .Data.certificate }}{{ end }}
 EOF
 cat <<EOF> /etc/vault-agent.d/consul-acl-template.ctmpl
 acl = {
@@ -46,20 +45,20 @@ acl = {
   enable_token_persistence = true
   enable_token_replication = true
   tokens {
-    agent  = {{ with secret "${tpl_vault_namespace}/kv/consul" }}"{{ .Data.data.master_token }}"{{ end }}
+    agent  = {{ with secret "kv/consul" }}"{{ .Data.data.master_token }}"{{ end }}
   }
 }
-encrypt = {{ with secret "${tpl_vault_namespace}/kv/consul" }}"{{ .Data.data.gossip_key }}"{{ end }}
+encrypt = {{ with secret "kv/consul" }}"{{ .Data.data.gossip_key }}"{{ end }}
 EOF
 cat <<EOF> /etc/vault-agent.d/envoy-token-template.ctmpl
-{{ with secret "${tpl_vault_namespace}/kv/consul" }}{{ .Data.data.master_token }}{{ end }}
+{{ with secret "kv/consul" }}{{ .Data.data.master_token }}{{ end }}
 EOF
 cat <<EOF> /etc/vault-agent.d/vault.hcl
 pid_file = "/var/run/vault-agent-pidfile"
 auto_auth {
   method "azure" {
 		mount_path = "auth/azure"
-		namespace  = "${tpl_vault_namespace}"
+		namespace  = "${tpl_namespace}"
 		config = {
 				role = "consul"
 				resource = "https://management.azure.com/"
@@ -123,7 +122,7 @@ log_level = "INFO"
 ports = {
   grpc = 8502
 }
-retry_join = ["provider=azure tag_name=Name tag_value=consul-server subscription_id=${tpl_subscription_id}"]
+retry_join = ["provider=azure tag_name=Env tag_value=consul-${tpl_env} subscription_id=${tpl_subscription_id}"]
 EOF
 cat <<EOF> /etc/consul.d/tls.hcl
 ca_file = "/opt/consul/tls/ca-cert.pem"

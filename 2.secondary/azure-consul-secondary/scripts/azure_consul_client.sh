@@ -31,7 +31,7 @@ local_ipv4="$(curl -s -H Metadata:true --noproxy "*" "http://169.254.169.254/met
 #vault
 az login --identity
 export VAULT_ADDR="${tpl_vault_addr}"
-export VAULT_NAMESPACE="${tpl_vault_namespace}"
+export VAULT_NAMESPACE="${tpl_namespace}"
 
 export VAULT_TOKEN=$(vault write -field=token auth/azure/login -field=token role="consul" \
      jwt="$(curl -s 'http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fmanagement.azure.com%2F' -H Metadata:true | jq -r '.access_token')")
@@ -74,7 +74,7 @@ log_level = "INFO"
 ports = {
   grpc = 8502
 }
-retry_join = ["provider=azure tag_name=Name tag_value=consul-server" subscription_id=${tpl_subscription_id}"]
+retry_join = ["provider=azure tag_name=Env tag_value=consul-${tpl_env} subscription_id=${tpl_subscription_id}"]
 EOF
 
 # Consul TLS

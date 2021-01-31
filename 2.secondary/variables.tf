@@ -6,15 +6,15 @@ variable "tfc_org" {
   type = string
 }
 
+variable "tfc_vault_ws" {
+  type = string
+}
+
 variable "tfc_aws_ws" {
   type = string
 }
 
 variable "tfc_azure_ws" {
-  type = string
-}
-
-variable "aws_vault_account_id" {
   type = string
 }
 
