@@ -112,7 +112,7 @@ sleep 30
 export CONSUL_HTTP_TOKEN=$${MASTER_TOKEN}
 WEB_SERVICE_TOKEN=$(consul acl token create -format=json -service-identity=web:aws-${tpl_region} | jq -r .SecretID)
 
-cat <<EOF> /etc/consul.d/web.hcl
+cat <<EOF> /home/ubuntu/web.hcl
 service {
   name = "web",
   port = 8080,
@@ -132,7 +132,6 @@ service {
   }
 }
 EOF
-
-consul reload
+chown ubuntu:ubuntu /home/ubuntu/web.hcl
 
 exit 0

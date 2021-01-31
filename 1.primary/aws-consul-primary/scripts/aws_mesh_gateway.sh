@@ -108,6 +108,7 @@ sudo systemctl start vault-agent.service
 sleep 10
 
 mkdir -p /opt/consul/tls/
+
 cat <<EOF> /etc/consul.d/consul.hcl
 datacenter = "aws-${tpl_region}"
 primary_datacenter = "aws-${tpl_region}"
