@@ -47,7 +47,7 @@ vault read -field=certificate pki/cert/ca > /opt/consul/tls/ca-cert.pem
 # Consul ACL
 MASTER_TOKEN=$(vault kv get -field=master_token kv/consul)
 GOSSIP_KEY=$(vault kv get -field=gossip_key kv/consul)
-cat <<EOF> etc/consul.d/acl.hcl
+cat <<EOF> /etc/consul.d/acl.hcl
 acl = {
   enabled        = true
   default_policy = "deny"
@@ -100,7 +100,45 @@ sudo echo "*/28 * * * * sudo service consul restart" >> consul
 sudo crontab consul
 sudo rm consul
 
+# install envoy
+curl -L https://getenvoy.io/cli | bash -s -- -b /usr/local/bin
+getenvoy fetch standard:1.16.0
+cp /root/.getenvoy/builds/standard/*/linux_glibc/bin/envoy /usr/local/bin/envoy
+
+mkdir -p /etc/envoy
+cat <<EOF > /etc/envoy/consul.token
+$${MASTER_TOKEN}
+EOF
+
 #make sure the config was picked up
 sudo service consul restart
+
+# sample app
+
+sleep 15
+
+export CONSUL_HTTP_TOKEN=$${MASTER_TOKEN}
+SERVICE_TOKEN=$(consul acl token create -format=json -service-identity=web:azure-${tpl_azure_region} | jq -r .SecretID)
+
+cat <<EOF> /etc/consul.d/socat.hcl
+service {
+  name = "web",
+  port = 8080,
+  token = "$${SERVICE_TOKEN}",
+  connect {
+    sidecar_service {
+      proxy {
+        upstreams = [
+          {
+            destination_name = "socat",
+            datacenter = "aws-${tpl_aws_region}",
+            local_bind_port = 8181
+          }
+        ]
+      }
+    }
+  }
+}
+EOF
 
 exit 0
