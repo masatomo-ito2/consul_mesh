@@ -27,7 +27,7 @@ module "vnet" {
     env = "var.env"
   }
 
-  depends_on = [ module.network ]
+  depends_on = [module.network]
 }
 
 resource "azurerm_network_security_group" "consul_sg" {
@@ -51,7 +51,7 @@ locals {
       destination_address_prefix = "*"
     }
 
-/*
+    /*
     ssh = {
       name                       = "ssh"
       priority                   = 100
@@ -78,7 +78,7 @@ resource "azurerm_network_security_rule" "rules" {
   destination_port_range      = each.value.destination_port_range
   source_address_prefix       = each.value.source_address_prefix
   destination_address_prefix  = each.value.destination_address_prefix
-  resource_group_name = var.rg_name
+  resource_group_name         = var.rg_name
   network_security_group_name = azurerm_network_security_group.consul_sg.name
 }
 

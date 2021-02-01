@@ -143,10 +143,10 @@ EOF
 
 echo "export CONSUL_HTTP_TOKEN=$${MASTER_TOKEN}" > $${DEMO_DIR}/0.auth_to_consul.sh
 echo 'consul services register socat.hcl' > $${DEMO_DIR}/1.register_socat.sh
-echo 'consul connect envoy -sidecar-for socat -grpc-addr "https://127.0.0.1:8502" -ca-file=/opt/consul/tls/ca-cert.pem -token-file /etc/envoy/consul.token'  > $${DEMO_DIR}/2.start_envoy_proxy.sh
+echo 'consul connect envoy -sidecar-for socat -token-file /etc/envoy/consul.token'  > $${DEMO_DIR}/2.start_envoy_proxy.sh
 echo 'socat -v tcp-l:8181,fork exec:"/bin/cat"'  > $${DEMO_DIR}/3.start_socat.sh
 
-chmod 755 $${DEMO}/*.sh
+chmod 755 $${DEMO_DIR}/*.sh
 chown -R ubuntu:ubuntu $${DEMO_DIR}
 
 exit 0

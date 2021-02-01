@@ -67,16 +67,16 @@ module "aws-consul-primary" {
   ssh_key_name                         = var.ssh_key_name
   public_subnets_id                    = data.terraform_remote_state.aws_state.outputs.public_subnets_japan
   region                               = var.region
-  azure_region = data.terraform_remote_state.azure_state.outputs.rg_location
+  azure_region                         = data.terraform_remote_state.azure_state.outputs.rg_location
   aws_consul_iam_instance_profile_name = module.iam.aws_consul_iam_instance_profile_name
   env                                  = var.env
   vault_addr                           = var.vault_addr
   vault_namespace                      = var.vault_namespace
   admin_passwd                         = data.terraform_remote_state.vault_state.outputs.admin_passwd
 
-  role_id                              = module.vault.aws_consul_role_id
-  secret_id                            = module.vault.aws_consul_secret_id
-  mgw_secret_id                        = module.vault.aws_mgw_secret_id
+  role_id       = module.vault.aws_consul_role_id
+  secret_id     = module.vault.aws_consul_secret_id
+  mgw_secret_id = module.vault.aws_mgw_secret_id
 
 
   depends_on = [module.vault]

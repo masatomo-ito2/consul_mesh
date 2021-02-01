@@ -10,11 +10,11 @@ variable "azure_tenant_id" {
   type = string
 }
 
-variable approle_path {
-	type = string
+variable "approle_path" {
+  type = string
 }
 
-variable azure_path {
-	type = string
+variable "azure_path" {
+  type = string
 }
 
