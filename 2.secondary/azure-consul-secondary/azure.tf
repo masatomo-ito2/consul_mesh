@@ -1,14 +1,85 @@
-module "azure-shared-svcs-network" {
+module "network" {
   source              = "Azure/network/azurerm"
   resource_group_name = var.rg_name
-  vnet_name           = "shared-svcs-vnet"
+  vnet_name           = "consul-vnet"
   address_space       = "10.1.0.0/16"
   subnet_prefixes     = ["10.1.0.0/24"]
-  subnet_names        = ["shared"]
+  subnet_names        = ["consul"]
 
   tags = {
     owner = "masa@hashicorp.com"
   }
+}
+
+#  Add security rule to network
+module "vnet" {
+  source              = "Azure/vnet/azurerm"
+  resource_group_name = var.rg_name
+  address_space       = ["10.1.0.0/16"]
+  subnet_prefixes     = ["10.1.0.0/24"]
+  subnet_names        = ["consul"]
+
+  nsg_ids = {
+    consul = azurerm_network_security_group.consul_sg.id
+  }
+
+  tags = {
+    env = "var.env"
+  }
+
+  depends_on = [ module.network ]
+}
+
+resource "azurerm_network_security_group" "consul_sg" {
+  name                = "consul-server-sg"
+  resource_group_name = var.rg_name
+  location            = var.rg_location
+}
+
+locals {
+  nsg_rules = {
+
+    base = {
+      name                       = "all"
+      priority                   = 100
+      direction                  = "Inbound"
+      access                     = "Allow" # shoud set to 'Deny'
+      protocol                   = "Tcp"
+      source_port_range          = "*"
+      destination_port_range     = "*"
+      source_address_prefix      = "*"
+      destination_address_prefix = "*"
+    }
+
+/*
+    ssh = {
+      name                       = "ssh"
+      priority                   = 100
+      direction                  = "Inbound"
+      access                     = "Allow"
+      protocol                   = "Tcp"
+      source_port_range          = "*"
+      destination_port_range     = "22"
+      source_address_prefix      = "*"
+      destination_address_prefix = "*"
+    }
+*/
+  }
+}
+
+resource "azurerm_network_security_rule" "rules" {
+  for_each                    = local.nsg_rules
+  name                        = each.key
+  direction                   = each.value.direction
+  access                      = each.value.access
+  priority                    = each.value.priority
+  protocol                    = each.value.protocol
+  source_port_range           = each.value.source_port_range
+  destination_port_range      = each.value.destination_port_range
+  source_address_prefix       = each.value.source_address_prefix
+  destination_address_prefix  = each.value.destination_address_prefix
+  resource_group_name = var.rg_name
+  network_security_group_name = azurerm_network_security_group.consul_sg.name
 }
 
 resource "azurerm_public_ip" "consul" {
@@ -40,7 +111,7 @@ resource "azurerm_network_interface" "consul" {
 
   ip_configuration {
     name                          = "config"
-    subnet_id                     = module.azure-shared-svcs-network.vnet_subnets[0]
+    subnet_id                     = module.network.vnet_subnets[0]
     private_ip_address_allocation = "Dynamic"
     public_ip_address_id          = azurerm_public_ip.consul.id
   }
@@ -114,7 +185,7 @@ resource "azurerm_network_interface" "consul_client" {
 
   ip_configuration {
     name                          = "config"
-    subnet_id                     = module.azure-shared-svcs-network.vnet_subnets[0]
+    subnet_id                     = module.network.vnet_subnets[0]
     private_ip_address_allocation = "Dynamic"
     public_ip_address_id          = azurerm_public_ip.consul_client.id
   }
@@ -188,7 +259,7 @@ resource "azurerm_network_interface" "consul-mgw" {
 
   ip_configuration {
     name                          = "config"
-    subnet_id                     = module.azure-shared-svcs-network.vnet_subnets[0]
+    subnet_id                     = module.network.vnet_subnets[0]
     private_ip_address_allocation = "Dynamic"
     public_ip_address_id          = azurerm_public_ip.mgw.id
   }

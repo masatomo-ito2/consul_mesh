@@ -34,7 +34,7 @@ resource "aws_security_group" "consul" {
     from_port   = 8300
     to_port     = 8300
     protocol    = "tcp"
-    cidr_blocks = [data.aws_subnet.public.cidr_block]
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   ingress {
@@ -44,11 +44,27 @@ resource "aws_security_group" "consul" {
     cidr_blocks = [data.aws_subnet.public.cidr_block]
   }
 
+  #  LAN serf
   ingress {
     from_port   = 8301
     to_port     = 8301
     protocol    = "udp"
     cidr_blocks = [data.aws_subnet.public.cidr_block]
+  }
+
+  #  WAN serf
+  ingress {
+    from_port   = 8302
+    to_port     = 8302
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 8302
+    to_port     = 8302
+    protocol    = "udp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   ingress {

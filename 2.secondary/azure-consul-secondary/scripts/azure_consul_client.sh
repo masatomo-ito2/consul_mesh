@@ -53,8 +53,10 @@ acl = {
   default_policy = "deny"
   down_policy    = "extend-cache"
   enable_token_persistence = true
+  enable_token_replication = true
   tokens {
     agent  = "$${MASTER_TOKEN}"
+    default = "$${MASTER_TOKEN}"
   }
 }
 encrypt = "$${GOSSIP_KEY}"
@@ -95,12 +97,6 @@ sudo systemctl enable consul.service
 sudo systemctl start consul.service
 sleep 10
 
-#license
-sudo crontab -l > consul
-sudo echo "*/28 * * * * sudo service consul restart" >> consul
-sudo crontab consul
-sudo rm consul
-
 # install envoy
 curl -L https://getenvoy.io/cli | bash -s -- -b /usr/local/bin
 getenvoy fetch standard:1.16.0
@@ -121,7 +117,14 @@ sleep 30
 export CONSUL_HTTP_TOKEN=$${MASTER_TOKEN}
 SOCAT_SERVICE_TOKEN=$(consul acl token create -format=json -service-identity=socat:azure-${tpl_azure_region} | jq -r .SecretID)
 
-cat <<EOF> /home/ubuntu/socat.hcl
+# demp preparation
+
+apt install socat
+
+DEMO_DIR=/home/ubuntu/proxy_demo
+mkdir -p $${DEMO_DIR}
+
+cat <<EOF> $${DEMO_DIR}/socat.hcl
 service {
   name = "socat",
   port = 8181,
@@ -132,6 +135,12 @@ service {
 }
 EOF
 
-chown ubuntu:ubuntu /home/ubuntu/socat.hcl
+echo 'export CONSUL_HTTP_TOKEN=${MASTER_TOKEN}' > $${DEMO_DIR}/0.auth_to_consul.sh
+echo 'consul services register socat.hcl' > $${DEMO_DIR}/1.register_socat.sh
+echo 'consul connect envoy -sidecar-for socat -token-file /etc/envoy/consul.token'  > $${DEMO_DIR}/2.start_envoy_proxy.sh
+echo 'socat -v tcp-l:8181,fork exec:"/bin/cat"'  > $${DEMO_DIR}/3.start_socat.sh
+
+chmod -R 755 $${DEMO}/*.sh
+chown -R ubuntu:ubuntu $${DEMO_DIR}
 
 exit 0

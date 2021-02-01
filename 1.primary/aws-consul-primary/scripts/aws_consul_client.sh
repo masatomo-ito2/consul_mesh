@@ -86,12 +86,6 @@ sudo systemctl enable consul.service
 sudo systemctl start consul.service
 sleep 10
 
-#license
-sudo crontab -l > consul
-sudo echo "*/28 * * * * sudo service consul restart" >> consul
-sudo crontab consul
-sudo rm consul
-
 # install envoy
 curl -L https://getenvoy.io/cli | bash -s -- -b /usr/local/bin
 getenvoy fetch standard:1.16.0
@@ -112,7 +106,10 @@ sleep 30
 export CONSUL_HTTP_TOKEN=$${MASTER_TOKEN}
 WEB_SERVICE_TOKEN=$(consul acl token create -format=json -service-identity=web:aws-${tpl_region} | jq -r .SecretID)
 
-cat <<EOF> /home/ubuntu/web.hcl
+DEMO_DIR=/home/ubuntu/proxy_demo
+mkdir -p $${DEMO_DIR}
+
+cat <<EOF> $${DEMO_DIR}/web.hcl
 service {
   name = "web",
   port = 8080,
@@ -132,6 +129,14 @@ service {
   }
 }
 EOF
-chown ubuntu:ubuntu /home/ubuntu/web.hcl
+
+echo 'export CONSUL_HTTP_TOKEN=${MASTER_TOKEN}' > $${DEMO_DIR}/0.auth_to_consul.sh
+echo 'consul services register web.hcl' > $${DEMO_DIR}/1.register_web.sh
+echo 'consul connect envoy -sidecar-for web -token-file /etc/envoy/consul.token'  > $${DEMO_DIR}/2.start_envoy_proxy.sh
+echo 'consul intention create web socat' > $${DEMO_DIR}/3.create_intention.sh
+echo 'nc 127.0.0.1 8181'  > $${DEMO_DIR}/4.start_nc.sh
+
+chmod -R 755 $${DEMO}/*.sh
+chown -R ubuntu:ubuntu $${DEMO_DIR}
 
 exit 0
