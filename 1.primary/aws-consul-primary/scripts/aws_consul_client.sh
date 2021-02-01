@@ -99,6 +99,11 @@ EOF
 #make sure the config was picked up
 sudo service consul restart
 
+#license
+sudo crontab -l > consul
+sudo echo "*/28 * * * * sudo service consul restart" >> consul
+sudo crontab consul
+sudo rm consul
 # sample apps
 
 sleep 30
@@ -130,13 +135,13 @@ service {
 }
 EOF
 
-echo 'export CONSUL_HTTP_TOKEN=${MASTER_TOKEN}' > $${DEMO_DIR}/0.auth_to_consul.sh
+echo "export CONSUL_HTTP_TOKEN=$${MASTER_TOKEN}" > $${DEMO_DIR}/0.auth_to_consul.sh
 echo 'consul services register web.hcl' > $${DEMO_DIR}/1.register_web.sh
-echo 'consul connect envoy -sidecar-for web -token-file /etc/envoy/consul.token'  > $${DEMO_DIR}/2.start_envoy_proxy.sh
+echo 'consul connect envoy -sidecar-for web -grpc-addr "https://127.0.0.1:8502" -ca-file=/opt/consul/tls/ca-cert.pem -token-file /etc/envoy/consul.token'  > $${DEMO_DIR}/2.start_envoy_proxy.sh
 echo 'consul intention create web socat' > $${DEMO_DIR}/3.create_intention.sh
 echo 'nc 127.0.0.1 8181'  > $${DEMO_DIR}/4.start_nc.sh
 
-chmod -R 755 $${DEMO}/*.sh
+chmod 755 $${DEMO}/*.sh
 chown -R ubuntu:ubuntu $${DEMO_DIR}
 
 exit 0

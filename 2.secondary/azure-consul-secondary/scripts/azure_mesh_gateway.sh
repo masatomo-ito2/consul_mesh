@@ -147,6 +147,12 @@ sudo systemctl enable consul.service
 sudo systemctl start consul.service
 sleep 10
 
+#license
+sudo crontab -l > consul
+sudo echo "*/28 * * * * sudo service consul restart" >> consul
+sudo crontab consul
+sudo rm consul
+
 #envoy mgw
 curl -L https://getenvoy.io/cli | bash -s -- -b /usr/local/bin
 getenvoy fetch standard:1.16.0
