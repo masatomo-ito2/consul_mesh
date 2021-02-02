@@ -96,8 +96,18 @@ cat <<EOF > /etc/envoy/consul.token
 $${MASTER_TOKEN}
 EOF
 
-#make sure the config was picked up
+# make sure the config was picked up
 sudo service consul restart
+
+# wait for consul leader
+while true
+do
+	RET=$(curl -s http://localhost:8500/v1/status/leader)
+	echo "length = ${#RET}"
+	[ ${#RET} -gt 2 ] && break
+	echo "[ERROR] no consul leader"
+	sleep 5
+done
 
 #license (every 5h 58m)
 sudo crontab -l > consul

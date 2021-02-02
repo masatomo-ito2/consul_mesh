@@ -107,16 +107,28 @@ cat <<EOF > /etc/envoy/consul.token
 $${MASTER_TOKEN}
 EOF
 
-#make sure the config was picked up
+# make sure the config was picked up
 sudo service consul restart
 
-#license (every 5h 58m)
+# license (every 5h 58m)
 sudo crontab -l > consul
 sudo echo "*/58 */5 * * * sudo service consul restart" >> consul
 sudo crontab consul
 sudo rm consul
 
-# sample app
+# wait for consul leader
+
+
+# wait for consul leader
+while true
+do
+	RET=$(curl -s http://localhost:8500/v1/status/leader)
+	echo "length = ${#RET}"
+	[ ${#RET} -gt 2 ] && break
+	echo "[ERROR] no consul leader"
+	sleep 5
+done
+
 
 export CONSUL_HTTP_TOKEN=$${MASTER_TOKEN}
 WEB_SERVICE_TOKEN=$(consul acl token create -format=json -service-identity=web:azure-${tpl_azure_region} | jq -r .SecretID)

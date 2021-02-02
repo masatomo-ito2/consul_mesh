@@ -139,7 +139,7 @@ data "template_file" "init" {
 
 # Consul client
 resource "aws_instance" "consul_client" {
-  depends_on = [azurerm_linux_virtual_machine.consul]
+  depends_on = [aws_instance.consul]
 
   instance_type               = "t3.small"
   ami                         = data.aws_ami.ubuntu.id
@@ -171,7 +171,7 @@ data "template_file" "client" {
 
 # Mesh gateway
 resource "aws_instance" "mesh_gateway" {
-  depends_on = [azurerm_linux_virtual_machine.consul]
+  depends_on = [aws_instance.consul]
 
   instance_type               = "t3.small"
   ami                         = data.aws_ami.ubuntu.id
