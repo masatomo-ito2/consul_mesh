@@ -99,9 +99,9 @@ EOF
 #make sure the config was picked up
 sudo service consul restart
 
-#license
+#license (every 5h 58m)
 sudo crontab -l > consul
-sudo echo "*/28 * * * * sudo service consul restart" >> consul
+sudo echo "*/58 */5 * * * sudo service consul restart" >> consul
 sudo crontab consul
 sudo rm consul
 # sample apps

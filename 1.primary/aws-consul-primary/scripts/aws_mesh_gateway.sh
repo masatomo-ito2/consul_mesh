@@ -53,6 +53,7 @@ EOF
 cat <<EOF> /etc/vault-agent.d/envoy-token-template.ctmpl
 {{ with secret "kv/consul" }}{{ .Data.data.master_token }}{{ end }}
 EOF
+
 cat <<EOF> /etc/vault-agent.d/vault.hcl
 pid_file = "/var/run/vault-agent-pidfile"
 auto_auth {
@@ -91,6 +92,7 @@ vault {
   address = "$${VAULT_ADDR}"
 }
 EOF
+
 cat <<EOF > /etc/systemd/system/vault-agent.service
 [Unit]
 Description=Envoy
@@ -140,9 +142,9 @@ sudo systemctl enable consul.service
 sudo systemctl start consul.service
 sleep 10
 
-#license
+#license (restart every 5h 58min)
 sudo crontab -l > consul
-sudo echo "*/28 * * * * sudo service consul restart" >> consul
+sudo echo "*/58 */5 * * * sudo service consul restart" >> consul
 sudo crontab consul
 sudo rm consul
 

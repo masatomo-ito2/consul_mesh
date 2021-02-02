@@ -68,5 +68,3 @@ path "pki/cert/ca"
 }
 EOT
 }
-
-

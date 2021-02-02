@@ -147,9 +147,9 @@ sudo systemctl enable consul.service
 sudo systemctl start consul.service
 sleep 10
 
-#license
+#license (every 5h 58m)
 sudo crontab -l > consul
-sudo echo "*/28 * * * * sudo service consul restart" >> consul
+sudo echo "*/58 */5 * * * sudo service consul restart" >> consul
 sudo crontab consul
 sudo rm consul
 
