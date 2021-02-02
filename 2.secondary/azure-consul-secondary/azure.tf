@@ -178,6 +178,7 @@ data "template_file" "azure-server-init" {
 }
 
 # Consul Client
+
 resource "azurerm_network_interface" "consul_client" {
   name                = "consul-client-nic"
   resource_group_name = var.rg_name
@@ -198,6 +199,7 @@ resource "azurerm_network_interface" "consul_client" {
 }
 
 resource "azurerm_linux_virtual_machine" "consul_client" {
+  depends_on = [ azurerm_linux_virtual_machine.consul ]
   name                  = "consul-client-vm"
   location              = var.rg_location
   resource_group_name   = var.rg_name
@@ -285,6 +287,7 @@ data "template_file" "azure-mgw-init" {
 }
 
 resource "azurerm_linux_virtual_machine" "consul-mgw" {
+  depends_on = [ azurerm_linux_virtual_machine.consul ]
   name                  = "consul-mgw-vm"
   resource_group_name   = var.rg_name
   location              = var.rg_location

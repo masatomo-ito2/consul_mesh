@@ -140,7 +140,6 @@ chown -R consul:consul /opt/consul/
 chown -R consul:consul /etc/consul.d/
 sudo systemctl enable consul.service
 sudo systemctl start consul.service
-sleep 10
 
 #license (restart every 5h 58min)
 sudo crontab -l > consul
@@ -167,9 +166,8 @@ WantedBy=multi-user.target
 EOF
 sudo systemctl enable envoy.service
 sudo systemctl start envoy.service
-sleep 10
 
-#make sure the config was picked up
+# make sure the config was picked up
 sudo service consul restart
 sudo service envoy restart
 

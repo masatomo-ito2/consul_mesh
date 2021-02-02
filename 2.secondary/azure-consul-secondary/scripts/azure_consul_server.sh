@@ -31,6 +31,7 @@ local_ipv4=$(curl -H Metadata:true --noproxy "*" "http://169.254.169.254/metadat
 #vault
 az login --identity
 export VAULT_ADDR="${tpl_vault_addr}"
+export VAULT_NAMESPACE="${tpl_namespace}"
 
 logger "VAULT_ADDR: $${VAULT_ADDR}"
 
@@ -151,6 +152,7 @@ cat <<EOF> /etc/consul.d/server.json
   }
 }
 EOF
+
 cat <<EOF> /etc/consul.d/tls.json
 {
   "verify_incoming": true,
@@ -164,6 +166,7 @@ cat <<EOF> /etc/consul.d/tls.json
   }
 }
 EOF
+
 chown -R consul:consul /opt/consul/
 chown -R consul:consul /etc/consul.d/
 sudo systemctl enable consul.service
