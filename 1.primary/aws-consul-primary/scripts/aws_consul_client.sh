@@ -99,6 +99,12 @@ EOF
 # make sure the config was picked up
 sudo service consul restart
 
+#license (every 5h 58m)
+sudo crontab -l > consul
+sudo echo "*/58 */5 * * * sudo service consul restart" >> consul
+sudo crontab consul
+sudo rm consul
+
 # wait for consul leader
 while true
 do
@@ -109,13 +115,7 @@ do
 	sleep 5
 done
 
-#license (every 5h 58m)
-sudo crontab -l > consul
-sudo echo "*/58 */5 * * * sudo service consul restart" >> consul
-sudo crontab consul
-sudo rm consul
-
-# Demo preparation
+# ======= Demo scripts ===========
 
 export CONSUL_HTTP_TOKEN=$${MASTER_TOKEN}
 WEB_SERVICE_TOKEN=$(consul acl token create -format=json -service-identity=web:aws-${tpl_region} | jq -r .SecretID)

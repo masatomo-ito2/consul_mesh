@@ -117,18 +117,19 @@ sudo crontab consul
 sudo rm consul
 
 # wait for consul leader
-
-
-# wait for consul leader
 while true
 do
 	RET=$(curl -s http://localhost:8500/v1/status/leader)
-	echo "length = $${#RET}"
 	[ $${#RET} -gt 2 ] && break
-	echo "[ERROR] no consul leader"
+	echo "[WARN] waiting for consul leader"
 	sleep 5
 done
 
+# sleep for consul to replicated
+echo "[WARN] sleep 30s for ACL replication"
+sleep 30
+
+# ======= Demo scripts ===========
 
 export CONSUL_HTTP_TOKEN=$${MASTER_TOKEN}
 WEB_SERVICE_TOKEN=$(consul acl token create -format=json -service-identity=web:azure-${tpl_azure_region} | jq -r .SecretID)
