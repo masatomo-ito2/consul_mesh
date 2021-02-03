@@ -128,10 +128,10 @@ logger "SOCAT_SERVICE_TOKEN: $${SOCAT_SERVICE_TOKEN}"
 
 apt install socat
 
-DEMO_SOCAT_DIR=/home/ubuntu/proxy_demo_socat
-mkdir -p $${DEMO_SOCAT_DIR}
+DEMO_SERVER_DIR=/home/ubuntu/proxy_demo_server
+mkdir -p $${DEMO_SERVER_DIR}
 
-cat <<EOF> $${DEMO_SOCAT_DIR}/socat.hcl
+cat <<EOF> $${DEMO_SERVER_DIR}/socat.hcl
 service {
   name = "socat",
   id = "socat",
@@ -143,20 +143,29 @@ service {
 }
 EOF
 
-echo "export CONSUL_HTTP_TOKEN=$${MASTER_TOKEN}" > $${DEMO_SOCAT_DIR}/0.auth_to_consul.sh
-echo 'consul services register socat.hcl' > $${DEMO_SOCAT_DIR}/1.register_socat.sh
-echo 'consul connect envoy -sidecar-for socat -token-file /etc/envoy/consul.token -- -l debug'  > $${DEMO_SOCAT_DIR}/2.start_envoy_proxy.sh
-echo 'socat -v tcp-l:18181,fork exec:"/bin/cat"'  > $${DEMO_SOCAT_DIR}/3.start_socat.sh
+cat <<EOF> $${DEMO_SERVER_DIR}/service_defaults.hcl
+Kind      = "service-defaults"
+Name      = "socat"
+Protocol  = "tcp"
+EOF
 
-chmod 755 $${DEMO_SOCAT_DIR}/*.sh
-chown -R ubuntu:ubuntu $${DEMO_SOCAT_DIR}
+echo "export CONSUL_HTTP_TOKEN=$${MASTER_TOKEN}" > $${DEMO_SERVER_DIR}/0.auth_to_consul.sh
+cat <<EOF> $${DEMO_SERVER_DIR}/1.register_socat.sh
+consul services register socat.hcl
+consul config write service_defaults.hcl
+EOF
+echo 'consul connect envoy -sidecar-for socat -token-file /etc/envoy/consul.token -- -l debug'  > $${DEMO_SERVER_DIR}/2.start_envoy_proxy.sh
+echo 'socat -v tcp-l:18181,fork exec:"/bin/cat"'  > $${DEMO_SERVER_DIR}/3.start_socat.sh
+
+chmod 755 $${DEMO_SERVER_DIR}/*.sh
+chown -R ubuntu:ubuntu $${DEMO_SERVER_DIR}
 
 # === scripts for curl ===
 
-DEMO_CURL_DIR=/home/ubuntu/proxy_demo_curl
-mkdir -p $${DEMO_CURL_DIR}
+DEMO_CLIENT_DIR=/home/ubuntu/proxy_demo_client
+mkdir -p $${DEMO_CLIENT_DIR}
 
-cat <<EOF> $${DEMO_CURL_DIR}/web.hcl
+cat <<EOF> $${DEMO_CLIENT_DIR}/web.hcl
 service {
   name = "web",
   id = "web",
@@ -178,13 +187,23 @@ service {
 }
 EOF
 
-echo "export CONSUL_HTTP_TOKEN=$${MASTER_TOKEN}" > $${DEMO_CURL_DIR}/0.auth_to_consul.sh
-echo 'consul services register web.hcl' > $${DEMO_CURL_DIR}/1.register_web.sh
-echo 'consul connect envoy -sidecar-for web -token-file /etc/envoy/consul.token -- -l debug'  > $${DEMO_CURL_DIR}/2.start_envoy_proxy.sh
-echo 'consul intention create web socat' > $${DEMO_CURL_DIR}/3.create_intention.sh
-echo 'curl --verbose 127.0.0.1:8181'  > $${DEMO_CURL_DIR}/4.send_get_request.sh
+cat <<EOF> $${DEMO_CLIENT_DIR}/service_defaults.hcl
+Kind      = "service-defaults"
+Name      = "web"
+Protocol  = "tcp"
+EOF
 
-chmod 755 $${DEMO_CURL_DIR}/*.sh
-chown -R ubuntu:ubuntu $${DEMO_CURL_DIR}
+echo "export CONSUL_HTTP_TOKEN=$${MASTER_TOKEN}" > $${DEMO_CLIENT_DIR}/0.auth_to_consul.sh
+cat <<EOF> $${DEMO_CLIENT_DIR}/1.register_web.sh
+consul services register web.hcl
+consul config write service_defaults.hcl
+EOF
+echo 'consul connect envoy -sidecar-for web -token-file /etc/envoy/consul.token -- -l debug'  > $${DEMO_CLIENT_DIR}/2.start_envoy_proxy.sh
+echo 'consul intention create web socat' > $${DEMO_CLIENT_DIR}/3.create_intention.sh
+echo 'curl --verbose 127.0.0.1:8181'  > $${DEMO_CLIENT_DIR}/4.send_get_request.sh
+echo 'nc 127.0.0.1 8181'  > $${DEMO_CLIENT_DIR}/5.netcat.sh
+
+chmod 755 $${DEMO_CLIENT_DIR}/*.sh
+chown -R ubuntu:ubuntu $${DEMO_CLIENT_DIR}
 
 exit 0
