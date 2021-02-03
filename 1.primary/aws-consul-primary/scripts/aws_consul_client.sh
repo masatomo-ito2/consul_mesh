@@ -103,8 +103,8 @@ sudo service consul restart
 while true
 do
 	RET=$(curl -s http://localhost:8500/v1/status/leader)
-	echo "length = ${#RET}"
-	[ ${#RET} -gt 2 ] && break
+	echo "length = $${#RET}"
+	[ $${#RET} -gt 2 ] && break
 	echo "[ERROR] no consul leader"
 	sleep 5
 done
@@ -134,6 +134,7 @@ mkdir -p $${DEMO_SOCAT_DIR}
 cat <<EOF> $${DEMO_SOCAT_DIR}/socat.hcl
 service {
   name = "socat",
+  id = "socat",
   port = 18181,
   token = "$${SOCAT_SERVICE_TOKEN}",
   connect {
@@ -158,6 +159,7 @@ mkdir -p $${DEMO_CURL_DIR}
 cat <<EOF> $${DEMO_CURL_DIR}/web.hcl
 service {
   name = "web",
+  id = "web",
   port = 8080,
   token = "$${WEB_SERVICE_TOKEN}",
   connect {

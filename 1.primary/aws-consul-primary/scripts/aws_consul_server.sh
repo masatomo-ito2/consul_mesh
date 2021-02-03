@@ -252,7 +252,8 @@ Kind      = "proxy-defaults"
 Name      = "global"
 Namespace = "default"
 Config {
-  protocol = "http"
+  # protocol = "http"
+  protocol = "tcp"
 }
 MeshGateway {
    Mode = "local"
